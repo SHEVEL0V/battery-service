@@ -1,0 +1,130 @@
+tesla-battery-service/
+│
+├── 📱 APP (Next.js 16 App Router)
+│   └── [locale]/                           # Динамічна локалізація (uk, en)
+│       ├── layout.tsx                      # Root layout з Providers
+│       │
+│       ├── (site)/                         # Публічні сторінки
+│       │   ├── page.tsx                    # 🏠 Головна (Hero + Stats + Services + HowItWorks + WhyUs + Reviews + BookingCTA + Map)
+│       │   ├── services/page.tsx           # 📋 Послуги (заглушка)
+│       │   ├── booking/page.tsx            # 📅 Запис (заглушка)
+│       │   └── contacts/page.tsx           # 📞 Контакти (заглушка)
+│       │
+│       └── (admin)/                        # Захищені сторінки (NextAuth)
+│           └── admin/
+│               ├── page.tsx                # 📊 Дашборд
+│               └── bookings/page.tsx       # 📑 Список заявок
+│
+└── api/
+    ├── bookings/route.ts                   # 📨 POST/GET заявки на ремонт
+    ├── contact/route.ts                    # 📧 POST контактні повідомлення
+    ├── services/route.ts                   # 📦 GET список услуг
+    └── auth/[...nextauth]/route.ts         # 🔐 NextAuth endpoints
+│
+├── 🎨 COMPONENTS
+│   ├── Providers.tsx                       # 🎭 Theme + next-intl провайдери
+│   │
+│   ├── ui/                                 # Базові компоненти (обгортки MUI)
+│   │   ├── Button.tsx
+│   │   ├── Card.tsx
+│   │   └── Badge.tsx
+│   │
+│   ├── layout/                             # Макет сторінки
+│   │   ├── Header.tsx                      # Навігація + Language Switch + Theme Toggle
+│   │   ├── Footer.tsx                      # Копірайт + Посилання
+│   │   ├── ThemeToggle.tsx                 # 🌙/☀️ Перемикач теми (light/dark)
+│   │   └── LanguageSwitcher.tsx            # 🌐 Перемикач мови (uk/en)
+│   │
+│   ├── sections/                           # Великі секції сторінки
+│   │   ├── Hero.tsx                        # 🎯 Заголовок з CTA
+│   │   ├── Stats.tsx                       # 📊 Лічильники (500+ ремонтів, гарантія)
+│   │   ├── Services.tsx                    # 💼 Картки послуг
+│   │   ├── HowItWorks.tsx                  # 🔧 4 кроки процесу ремонту
+│   │   ├── WhyUs.tsx                       # ✨ 6 переваг сервісу
+│   │   ├── Reviews.tsx                     # ⭐ Відгуки клієнтів
+│   │   ├── BookingCTA.tsx                  # 📢 Банер із закликом до дії
+│   │   └── Map.tsx                         # 🗺️ Google Map + Контакти
+│   │
+│   └── animation/                          # Анімаційні компоненти
+│       ├── ScrollReveal.tsx                # ✨ Появлення при скролі (Framer Motion)
+│       ├── ParallaxLayer.tsx               # 🌌 Паралакс ефект
+│       └── MagneticButton.tsx              # 🧲 Кнопка що тягнеться до мишки
+│
+├── 📚 LIB (Утиліти)
+│   ├── prisma.ts                           # 🗄️ Singleton Prisma Client
+│   ├── mail.ts                             # 📨 Resend email функції
+│   ├── telegram.ts                         # 🤖 Telegram Bot API
+│   ├── auth.ts                             # 🔐 NextAuth конфіг з Credentials
+│   └── i18n.ts                             # 🌐 Налаштування локалізації (uk, en)
+│
+├── 🎨 THEME
+│   └── index.ts                            # MUI теми (lightTheme, darkTheme)
+│
+├── 📋 TYPES
+│   └── index.ts                            # TypeScript типи (Booking, Service, Contact, Review, User)
+│
+├── 🗄️ PRISMA
+│   ├── schema.prisma                       # 📊 Схема БД (Booking, Service, Contact, Review, User)
+│   └── seed.ts                             # 🌱 Seed скрипт (дефолтні услуги + демо відгук)
+│
+├── 🌍 LOCALES
+│   └── messages.json                       # 🇺🇦🇬🇧 Переклади (uk, en)
+│
+├── 🔧 КОНФІГИ
+│   ├── next.config.ts                      # Next.js конфіг (output: 'standalone')
+│   ├── tsconfig.json                       # TypeScript (strict: true)
+│   ├── i18n.config.ts                      # next-intl конфіг
+│   ├── .eslintrc.json                      # ESLint правила
+│   ├── .npmrc                              # npm конфіг (legacy-peer-deps)
+│   └── middleware.ts                       # next-intl middleware (локалізація)
+│
+├── 🐳 DOCKER
+│   ├── Dockerfile                          # Multi-stage build (deps → builder → runner)
+│   ├── docker-compose.yml                  # Розробка (app + postgres)
+│   ├── docker-compose.prod.yml             # Production (app + postgres + nginx)
+│   ├── .dockerignore                       # Файли для ігнорування
+│   └── nginx/
+│       └── nginx.conf                      # Nginx reverse proxy + SSL
+│
+├── 📦 ЗАЛЕЖНОСТІ
+│   ├── package.json                        # npm пакети
+│   ├── .gitignore                          # Git ігнорування
+│   ├── .env.example                        # Приклад змінних середовища
+│   └── .npmrc                              # npm конфіг
+│
+├── 📖 ДОКУМЕНТАЦІЯ
+│   ├── README.md                           # Основна документація проекту
+│   ├── SETUP.md                            # Детальне налаштування
+│   ├── QUICKSTART.md                       # Швидкий старт
+│   ├── CLAUDE.md                           # Вихідна інструкція (як все має бути)
+│   └── PROJECT_STRUCTURE.txt               # Цей файл
+│
+└── 🎯 СКРИПТИ
+    └── setup.sh                            # Bash скрипт для автоматичного налаштування
+
+═══════════════════════════════════════════════════════════════
+
+🎯 ОСНОВНІ ФАЙЛИ ДЛЯ РОЗРОБКИ:
+
+1. Редагування секцій:         /components/sections/*.tsx
+2. Додавання компонентів:      /components/ui/*.tsx або /components/layout/*.tsx
+3. Налаштування послуг:        /app/api/services/route.ts
+4. Локалізація (переклади):    /locales/messages.json
+5. Теми (light/dark):          /theme/index.ts
+6. БД модель:                  /prisma/schema.prisma
+7. API endpoints:              /app/api/**/route.ts
+
+═══════════════════════════════════════════════════════════════
+
+📊 СТАТИСТИКА:
+
+- 🗂️ Директорій: 18
+- 📄 Файлів TypeScript/TSX: 41
+- 📝 Конфіг файлів: 10+
+- 🎨 Компонентів: 20+
+- 📚 API routes: 4
+- 🌍 Мов підтримки: 2 (uk, en)
+
+═══════════════════════════════════════════════════════════════
+
+✅ ГОТОВО ДО РОЗРОБКИ!

@@ -1,0 +1,75 @@
+generator client {
+  provider      = "prisma-client"
+  output        = "../generated/prisma"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Booking {
+  id        String        @id @default(cuid())
+  name      String
+  phone     String
+  email     String
+  carModel  String
+  year      Int
+  message   String?
+  status    BookingStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Service {
+  id       String  @id @default(cuid())
+  slug     String  @unique
+  titleUk  String
+  titleEn  String
+  descUk   String
+  descEn   String
+  price    Int
+  duration String
+  isActive Boolean @default(true)
+  order    Int     @default(0)
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  author    String
+  rating    Int
+  textUk    String
+  textEn    String
+  carModel  String
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id       String @id @default(cuid())
+  email    String @unique
+  password String
+  role     Role   @default(ADMIN)
+}
+
+enum Role {
+  ADMIN
+  SUPERADMIN
+}
