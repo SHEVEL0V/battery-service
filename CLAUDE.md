@@ -4,7 +4,7 @@
 
 Сайт для сервісу ремонту батарей Tesla. Надає інформацію про послуги, пояснення процесу ремонту, онлайн-запис на сервіс, контакти з картою та маршрутом.
 
-**Стек**: Next.js 16.2.7 (App Router) · TypeScript · MUI v9 · Prisma V7.8 · PostgreSQL · Framer Motion · GSAP · Three.js/R3F · Jose · bcryptjs
+**Стек**: Next.js 16.2.7 (App Router) · TypeScript · MUI v9.1 · Prisma · PostgreSQL · Framer Motion · GSAP · Three.js/R3F · Jose · bcryptjs
 
 ---
 
@@ -13,11 +13,12 @@
 ```
 src/
 ├── app/
-│   ├── [locale]/
-│   │   ├── layout.tsx               ← Providers: NextIntl + AppProviders (Server Component)
+│   ├── [lang]/
+│   │   ├── layout.tsx               ← generateStaticParams + AppProviders (RSC)
 │   │   ├── loading.tsx
 │   │   ├── error.tsx                ← 'use client'
 │   │   ├── not-found.tsx
+│   │   ├── dictionaries.ts          ← getDictionary(), hasLocale(), Locale type
 │   │   ├── (site)/
 │   │   │   ├── layout.tsx           ← Header + Footer wrapper (RSC)
 │   │   │   ├── page.tsx             ← Головна: Suspense секції
@@ -46,11 +47,10 @@ src/
 │   │           ├── page.tsx         ← dynamic = 'force-dynamic'
 │   │           └── bookings/
 │   │               └── page.tsx     ← dynamic = 'force-dynamic'
-│   └── api/                         ← ПОРОЖНЬО. API routes не використовуються.
-│                                       Всі мутації — Server Actions.
+│   └── api/                         ← ПОРОЖНЬО. Всі мутації — Server Actions.
 │
 ├── components/
-│   ├── features/                    ← по фічах (не по технічних шарах)
+│   ├── features/
 │   │   ├── hero/
 │   │   │   ├── Hero.tsx
 │   │   │   ├── HeroText.tsx         ← GSAP stagger (client)
@@ -61,7 +61,7 @@ src/
 │   │   │   ├── BookingStepCar.tsx
 │   │   │   ├── BookingStepDate.tsx
 │   │   │   ├── BookingStepContact.tsx
-│   │   │   ├── BookingSuccess.tsx   ← Framer Motion анімація
+│   │   │   ├── BookingSuccess.tsx
 │   │   │   ├── actions.ts           ← createBooking() 'use server'
 │   │   │   ├── schema.ts            ← Zod схеми
 │   │   │   └── types.ts
@@ -78,41 +78,628 @@ src/
 │   │   └── admin/
 │   │       ├── BookingsTable.tsx    ← client
 │   │       └── actions.ts           ← updateBookingStatus() 'use server'
-│   ├── ui/                          ← атомарні компоненти (Button, Card, Badge…)
-│   ├── layout/                      ← Header, Footer, ThemeToggle, LanguageSwitcher
-│   ├── animation/                   ← ScrollReveal, ParallaxLayer, MagneticButton
+│   ├── ui/
+│   ├── layout/
+│   ├── animation/
 │   └── providers/
-│       ├── AppProviders.tsx         ← 'use client', композиція всіх провайдерів
-│       ├── MuiThemeProvider.tsx     ← 'use client' + AppRouterCacheProvider
-│       └── LenisProvider.tsx        ← 'use client', smooth scroll
+│       ├── AppProviders.tsx         ← 'use client', всі провайдери
+│       └── MuiThemeProvider.tsx     ← 'use client', MUI v9 CSS vars
 │
 ├── lib/
 │   ├── auth/
-│   │   ├── session.ts               ← server-only, Jose encrypt/decrypt JWT
+│   │   ├── session.ts               ← server-only, Jose JWT
 │   │   ├── cookies.ts               ← server-only, createSession/deleteSession
-│   │   └── dal.ts                   ← server-only, verifySession/getUser (React.cache)
+│   │   └── dal.ts                   ← server-only, verifySession (React.cache)
 │   ├── db/
 │   │   ├── prisma.ts                ← singleton PrismaClient
 │   │   ├── services.ts              ← unstable_cache, tags:['services']
 │   │   ├── reviews.ts               ← unstable_cache, tags:['reviews']
-│   │   └── bookings.ts              ← React.cache (no ISR, admin = завжди свіжі)
-│   ├── cache-tags.ts                ← CACHE_TAGS константи
-│   ├── email/
-│   │   └── booking.ts               ← Resend helper
-│   ├── telegram.ts                  ← Telegram Bot notify
-│   └── i18n/
-│       ├── routing.ts               ← defineRouting
-│       ├── request.ts               ← getRequestConfig
-│       └── navigation.ts            ← createNavigation (типізовані Link, redirect)
+│   │   └── bookings.ts              ← React.cache (no ISR)
+│   ├── cache-tags.ts
+│   ├── email/booking.ts
+│   └── telegram.ts
 │
-├── prisma/
-│   └── schema.prisma
-├── locales/
-│   ├── uk.json
-│   └── en.json
-├── types/
-│   └── index.ts
-└── middleware.ts                    ← next-intl + optimistic auth check
+├── dictionaries/
+│   ├── uk.json                      ← всі переклади UK
+│   └── en.json                      ← всі переклади EN
+│
+├── theme/
+│   └── index.ts                     ← 'use client', MUI v9 CSS Variables theme
+│
+├── prisma/schema.prisma
+├── types/index.ts
+└── middleware.ts                    ← locale redirect + optimistic auth check
+```
+
+---
+
+## Локалізація
+
+**Підхід**: вбудований Next.js без зовнішніх бібліотек — [офіційна документація](https://nextjs.org/docs/app/guides/internationalization).
+
+Структура: `app/[lang]/` — Next.js передає `lang` у кожен layout і page через `params`.
+
+### dictionaries.ts
+
+```ts
+// src/app/[lang]/dictionaries.ts
+import 'server-only'
+
+const dictionaries = {
+  uk: () => import('@/dictionaries/uk.json').then((m) => m.default),
+  en: () => import('@/dictionaries/en.json').then((m) => m.default),
+}
+
+export type Locale = keyof typeof dictionaries
+
+export const hasLocale = (locale: string): locale is Locale =>
+  locale in dictionaries
+
+export const getDictionary = async (locale: Locale) =>
+  dictionaries[locale]()
+```
+
+### Root layout — generateStaticParams
+
+```tsx
+// src/app/[lang]/layout.tsx
+import { hasLocale, getDictionary } from './dictionaries'
+import { notFound } from 'next/navigation'
+import { AppProviders } from '@/components/providers/AppProviders'
+
+export async function generateStaticParams() {
+  return [{ lang: 'uk' }, { lang: 'en' }]
+}
+
+export default async function RootLayout({
+  children,
+  params,
+}: LayoutProps<'/[lang]'>) {
+  const { lang } = await params
+  if (!hasLocale(lang)) notFound()
+
+  return (
+    <html lang={lang} suppressHydrationWarning>
+      <body>
+        <AppProviders>
+          {children}
+        </AppProviders>
+      </body>
+    </html>
+  )
+}
+```
+
+### Використання в Server Component
+
+```tsx
+// src/app/[lang]/(site)/page.tsx
+import { getDictionary, hasLocale } from '../dictionaries'
+import { notFound } from 'next/navigation'
+
+export default async function HomePage({ params }: PageProps<'/[lang]'>) {
+  const { lang } = await params
+  if (!hasLocale(lang)) notFound()
+
+  const dict = await getDictionary(lang)
+  return (
+    <>
+      <HeroSection dict={dict.hero} />
+      <ServicesSection dict={dict.services} />
+    </>
+  )
+}
+```
+
+### Передача dict у Client Component
+
+```tsx
+// Словник передається як prop — клієнт не завантажує зайвих перекладів
+// Client Component НІКОЛИ не імпортує getDictionary напряму
+
+// RSC:
+const dict = await getDictionary(lang)
+return <BookingForm dict={dict.booking} />
+
+// Client Component:
+'use client'
+interface Props {
+  dict: Awaited<ReturnType<typeof getDictionary>>['booking']
+}
+export function BookingForm({ dict }: Props) {
+  return <button>{dict.submit}</button>
+}
+```
+
+### Структура словника (uk.json / en.json)
+
+```json
+{
+  "meta": {
+    "home": { "title": "...", "description": "..." },
+    "services": { "title": "...", "description": "..." }
+  },
+  "nav": { "services": "Послуги", "booking": "Записатись", "contacts": "Контакти" },
+  "hero": { "title": "...", "subtitle": "...", "cta": "Записатись на діагностику" },
+  "services": { "title": "Наші послуги", "cta": "Детальніше" },
+  "howItWorks": { "title": "...", "step1": { "title": "...", "desc": "..." } },
+  "stats": { "repairs": "ремонтів", "warranty": "гарантія", "experience": "років досвіду" },
+  "reviews": { "title": "Відгуки клієнтів" },
+  "booking": {
+    "title": "Записатись на сервіс",
+    "step1": "Автомобіль", "step2": "Дата", "step3": "Контакти",
+    "submit": "Підтвердити запис", "submitting": "Відправляємо...",
+    "success": "Дякуємо! Ми зв'яжемось з вами."
+  },
+  "contacts": { "title": "Контакти", "address": "...", "phone": "..." },
+  "footer": { "rights": "Всі права захищені" },
+  "auth": { "login": "Увійти", "logout": "Вийти", "email": "Email", "password": "Пароль" },
+  "errors": { "required": "Обов'язкове поле", "invalidEmail": "Невірний email" }
+}
+```
+
+### Middleware — locale redirect
+
+```ts
+// src/middleware.ts
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { match } from '@formatjs/intl-localematcher'
+import Negotiator from 'negotiator'
+import { decrypt } from '@/lib/auth/session'
+
+const locales = ['uk', 'en']
+const defaultLocale = 'uk'
+
+function getLocale(request: NextRequest): string {
+  const acceptLanguage = request.headers.get('accept-language') ?? ''
+  const headers = { 'accept-language': acceptLanguage }
+  const languages = new Negotiator({ headers }).languages()
+  try {
+    return match(languages, locales, defaultLocale)
+  } catch {
+    return defaultLocale
+  }
+}
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // 1. Locale redirect
+  const pathnameHasLocale = locales.some(
+    (locale) =>
+      pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+  )
+  if (!pathnameHasLocale) {
+    const locale = getLocale(request)
+    request.nextUrl.pathname = `/${locale}${pathname}`
+    return NextResponse.redirect(request.nextUrl)
+  }
+
+  // 2. Optimistic auth check для /admin
+  const isAdminRoute = pathname.includes('/admin')
+  const isAuthRoute  = pathname.includes('/login')
+
+  if (isAdminRoute || isAuthRoute) {
+    const cookie  = request.cookies.get('session')?.value
+    const session = await decrypt(cookie)
+
+    if (isAdminRoute && !session?.userId) {
+      return NextResponse.redirect(new URL('/uk/login', request.url))
+    }
+    if (isAuthRoute && session?.userId) {
+      return NextResponse.redirect(new URL('/uk/admin', request.url))
+    }
+  }
+}
+
+export const config = {
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|glb|gltf)).*)',
+  ],
+}
+```
+
+### generateMetadata з локалізацією
+
+```tsx
+// src/app/[lang]/(site)/services/[slug]/page.tsx
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string; slug: string }>
+}): Promise<Metadata> {
+  const { lang, slug } = await params
+  if (!hasLocale(lang)) return {}
+
+  const [dict, service] = await Promise.all([
+    getDictionary(lang),
+    getServiceBySlug(slug),
+  ])
+  if (!service) return {}
+
+  const title = lang === 'uk' ? service.titleUk : service.titleEn
+  const desc  = lang === 'uk' ? service.descUk  : service.descEn
+
+  return {
+    title,
+    description: desc,
+    alternates: {
+      canonical:  `/${lang}/services/${slug}`,
+      languages: {
+        uk: `/uk/services/${slug}`,
+        en: `/en/services/${slug}`,
+      },
+    },
+  }
+}
+```
+
+### LanguageSwitcher
+
+```tsx
+// src/components/layout/LanguageSwitcher.tsx
+'use client'
+import { usePathname, useRouter } from 'next/navigation'
+import type { Locale } from '@/app/[lang]/dictionaries'
+
+const locales: Locale[] = ['uk', 'en']
+
+export function LanguageSwitcher({ currentLang }: { currentLang: Locale }) {
+  const pathname = usePathname()
+  const router   = useRouter()
+
+  function switchLocale(newLang: Locale) {
+    // Замінити перший сегмент шляху
+    const segments = pathname.split('/')
+    segments[1] = newLang
+    router.push(segments.join('/'))
+  }
+
+  return (
+    <nav>
+      {locales.map((locale) => (
+        <button
+          key={locale}
+          onClick={() => switchLocale(locale)}
+          aria-current={locale === currentLang ? 'true' : undefined}
+        >
+          {locale.toUpperCase()}
+        </button>
+      ))}
+    </nav>
+  )
+}
+```
+
+### Залежності для локалізації
+
+```bash
+npm install negotiator @formatjs/intl-localematcher
+npm install -D @types/negotiator
+```
+
+**Правило**: `getDictionary` — тільки в Server Components. Client Components отримують переклади через props.
+
+---
+
+## MUI v9.1
+
+**Офіційна документація**: [MUI + Next.js integration](https://mui.com/material-ui/integrations/nextjs/)
+
+### Пакети
+
+```bash
+npm install @mui/material @mui/material-nextjs @emotion/react @emotion/styled @emotion/cache
+```
+
+### theme/index.ts
+
+```ts
+// src/theme/index.ts
+'use client'
+import { createTheme } from '@mui/material/styles'
+import { Inter } from 'next/font/google'
+
+const inter = Inter({ subsets: ['latin', 'cyrillic'], variable: '--font-inter' })
+
+// cssVariables: true — MUI v9 CSS Variables (усуває SSR flickering без next-themes)
+const baseTheme = {
+  cssVariables: true,
+  typography: {
+    fontFamily: 'var(--font-inter)',
+  },
+}
+
+export const lightTheme = createTheme({
+  ...baseTheme,
+  palette: {
+    mode: 'light',
+    primary:    { main: '#CC0000' },   // Tesla Red
+    secondary:  { main: '#1A1A1A' },
+    background: { default: '#F5F5F5', paper: '#FFFFFF' },
+  },
+})
+
+export const darkTheme = createTheme({
+  ...baseTheme,
+  palette: {
+    mode: 'dark',
+    primary:    { main: '#CC0000' },
+    secondary:  { main: '#E5E5E5' },
+    background: { default: '#0A0A0A', paper: '#141414' },
+  },
+})
+
+export { inter }
+```
+
+### MuiThemeProvider
+
+```tsx
+// src/components/providers/MuiThemeProvider.tsx
+'use client'
+import { useMemo, useState, useEffect } from 'react'
+import { ThemeProvider } from '@mui/material/styles'
+import CssBaseline from '@mui/material/CssBaseline'
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter'
+import { lightTheme, darkTheme } from '@/theme'
+
+type ColorMode = 'light' | 'dark'
+
+export function MuiThemeProvider({ children }: { children: React.ReactNode }) {
+  const [mode, setMode] = useState<ColorMode>('dark')
+
+  useEffect(() => {
+    // Читаємо збережений вибір або system preference
+    const stored = localStorage.getItem('color-mode') as ColorMode | null
+    if (stored) {
+      setMode(stored)
+    } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+      setMode('light')
+    }
+  }, [])
+
+  const theme = useMemo(
+    () => (mode === 'dark' ? darkTheme : lightTheme),
+    [mode]
+  )
+
+  return (
+    // AppRouterCacheProvider: збирає CSS на сервері, вставляє в <head>
+    <AppRouterCacheProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        {children}
+      </ThemeProvider>
+    </AppRouterCacheProvider>
+  )
+}
+```
+
+### AppProviders
+
+```tsx
+// src/components/providers/AppProviders.tsx
+'use client'
+import { MuiThemeProvider } from './MuiThemeProvider'
+import { LenisProvider }    from './LenisProvider'
+
+export function AppProviders({ children }: { children: React.ReactNode }) {
+  return (
+    <MuiThemeProvider>
+      <LenisProvider>
+        {children}
+      </LenisProvider>
+    </MuiThemeProvider>
+  )
+}
+```
+
+### Root layout з MUI v9
+
+```tsx
+// src/app/[lang]/layout.tsx
+import { inter } from '@/theme'
+import { AppProviders } from '@/components/providers/AppProviders'
+import { hasLocale } from './dictionaries'
+import { notFound } from 'next/navigation'
+
+export async function generateStaticParams() {
+  return [{ lang: 'uk' }, { lang: 'en' }]
+}
+
+export default async function RootLayout({
+  children,
+  params,
+}: LayoutProps<'/[lang]'>) {
+  const { lang } = await params
+  if (!hasLocale(lang)) notFound()
+
+  return (
+    // inter.variable — передає CSS custom property --font-inter
+    <html lang={lang} className={inter.variable} suppressHydrationWarning>
+      <body>
+        <AppProviders>
+          {children}
+        </AppProviders>
+      </body>
+    </html>
+  )
+}
+```
+
+### Next.js v16 — Link wrapper (обов'язково для MUI component prop)
+
+```tsx
+// src/components/ui/NextLink.tsx
+'use client'
+import Link, { type LinkProps } from 'next/link'
+export default Link
+
+// Використання:
+// import NextLink from '@/components/ui/NextLink'
+// <Button component={NextLink} href="/uk/booking">Записатись</Button>
+```
+
+### ThemeToggle
+
+```tsx
+// src/components/layout/ThemeToggle.tsx
+'use client'
+import IconButton from '@mui/material/IconButton'
+import { useTheme } from '@mui/material/styles'
+
+// Простий toggle через localStorage + re-render провайдера
+// Для глобального стейту — Context або zustand
+export function ThemeToggle() {
+  function toggle() {
+    const current = localStorage.getItem('color-mode') ?? 'dark'
+    const next = current === 'dark' ? 'light' : 'dark'
+    localStorage.setItem('color-mode', next)
+    window.location.reload() // або через Context setMode
+  }
+  return <IconButton onClick={toggle}>🌓</IconButton>
+}
+```
+
+---
+
+## Автентифікація
+
+Власна реалізація без NextAuth — [офіційна документація Next.js 16.2.7](https://nextjs.org/docs/app/guides/authentication).
+
+### Три шари захисту
+
+**1. Middleware** — optimistic check (Edge Runtime, без DB):
+```ts
+// Декриптує JWT cookie → redirect якщо немає сесії
+// НЕ звертається до БД
+```
+
+**2. DAL у Layout/Page** — справжній захист:
+```ts
+// src/lib/auth/dal.ts — import 'server-only'
+export const verifySession = cache(async (): Promise<SessionPayload> => {
+  const token   = (await cookies()).get('session')?.value
+  const session = await decrypt(token)
+  if (!session?.userId) redirect('/uk/login')
+  return session
+})
+```
+
+**3. Server Action** — перевірка перед кожною мутацією:
+```ts
+'use server'
+export async function updateBookingStatus(id: string, status: BookingStatus) {
+  await verifySession()  // ← завжди першим рядком
+  // ...
+}
+```
+
+### Session (Jose + cookie)
+
+```ts
+// src/lib/auth/session.ts — import 'server-only'
+// Jose HS256, exp: 7d
+
+// src/lib/auth/cookies.ts — import 'server-only'
+// httpOnly: true, secure: true, sameSite: 'lax', expires: 7d
+```
+
+```env
+SESSION_SECRET="згенерований_рядок_32_символи"
+# openssl rand -base64 32
+```
+
+---
+
+## API Routes
+
+**`/api` папка порожня.** Всі мутації — Server Actions.
+Обгрунтування: [Mutating Data](https://nextjs.org/docs/app/getting-started/mutating-data).
+
+---
+
+## Server Actions — конвенції
+
+```ts
+'use server'
+export async function someAction(
+  prevState: SomeState,
+  formData: FormData
+): Promise<SomeState> {
+  await verifySession()                          // 1. auth (якщо потрібно)
+  const validated = schema.safeParse(...)        // 2. Zod валідація
+  if (!validated.success) return { errors: ... }
+  await prisma.model.create(...)                 // 3. БД
+  revalidateTag(CACHE_TAGS.relevant)             // 4. інвалідація кешу
+  return { success: true }                       // 5. redirect() поза try/catch
+}
+```
+
+Client Component:
+```tsx
+'use client'
+const [state, action, isPending] = useActionState(someAction, initialState)
+// <form action={action}> — не onSubmit
+```
+
+---
+
+## Fetching та Кешування
+
+```ts
+// unstable_cache — між запитами (ISR для Prisma)
+export const getActiveServices = unstable_cache(
+  async () => prisma.service.findMany({ where: { isActive: true } }),
+  ['active-services'],
+  { tags: ['services'], revalidate: 3600 }
+)
+
+// React.cache() — дедуплікація в render pass (DAL функції)
+export const verifySession = cache(async () => { ... })
+
+// Паралельне завантаження — завжди Promise.all
+const [services, reviews] = await Promise.all([
+  getActiveServices(),
+  getVisibleReviews(),
+])
+```
+
+```ts
+// src/lib/cache-tags.ts
+export const CACHE_TAGS = {
+  services: 'services',
+  reviews:  'reviews',
+  bookings: 'bookings',
+} as const
+```
+
+Admin сторінки: `export const dynamic = 'force-dynamic'`
+
+---
+
+## Анімація
+
+- **Framer Motion** — scroll-reveal, page transitions
+- **GSAP + `useGSAP`** (НЕ useEffect!) — Hero, pin-анімації
+- **React Three Fiber** — 3D модель батареї, один `<Canvas>` на сторінку
+- **Lenis** — smooth scroll з RAF cleanup в `LenisProvider`
+- **`prefers-reduced-motion`** — завжди перевіряти
+
+```ts
+// GSAP:
+import { useGSAP } from '@gsap/react'
+useGSAP(() => {
+  gsap.fromTo(ref.current, { y: 50, opacity: 0 }, { y: 0, opacity: 1 })
+}, { scope: containerRef })
+
+// 3D Canvas — з Suspense + placeholder (запобігає CLS):
+const HeroScene = dynamic(() => import('./HeroScene'), {
+  ssr: false,
+  loading: () => <BatteryPlaceholder />,
+})
 ```
 
 ---
@@ -133,13 +720,7 @@ model Booking {
   updatedAt DateTime      @updatedAt
 }
 
-enum BookingStatus {
-  PENDING
-  CONFIRMED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
+enum BookingStatus { PENDING CONFIRMED IN_PROGRESS COMPLETED CANCELLED }
 
 model Service {
   id       String  @id @default(cuid())
@@ -181,448 +762,7 @@ model User {
   role     Role   @default(ADMIN)
 }
 
-enum Role {
-  ADMIN
-  SUPERADMIN
-}
-```
-
----
-
-## API Routes
-
-**Правило: `/api` папка порожня. Жодних Route Handlers для мутацій.**
-
-Всі мутації даних (booking, contact, admin CRUD) реалізовані через **Server Actions** (`'use server'`). Це відповідає офіційній документації Next.js 16.2.7 — [Mutating Data](https://nextjs.org/docs/app/getting-started/mutating-data).
-
-Route Handlers (`app/api/`) НЕ потрібні для цього проекту оскільки:
-
-- Немає зовнішніх webhook-ів що потребують окремого endpoint
-- Немає OAuth flow (NextAuth видалено)
-- Немає public REST API для третіх сторін
-
----
-
-## Автентифікація
-
-Власна реалізація на основі [офіційної документації Next.js 16.2.7](https://nextjs.org/docs/app/guides/authentication). **NextAuth видалено.**
-
-### Три шари захисту
-
-**1. Middleware** — optimistic check (Edge Runtime, без DB):
-
-```ts
-// src/middleware.ts
-// Декриптує JWT cookie → redirect якщо немає сесії
-// НЕ звертається до БД — тільки перевіряє підпис
-```
-
-**2. Layout / Page (DAL)** — справжній захист:
-
-```ts
-// src/lib/auth/dal.ts  — import 'server-only'
-export const verifySession = cache(async (): Promise<SessionPayload> => {
-  const token = (await cookies()).get("session")?.value;
-  const session = await decrypt(token);
-  if (!session?.userId) redirect("/uk/login");
-  return session;
-});
-```
-
-**3. Server Action** — перевірка перед кожною мутацією:
-
-```ts
-"use server";
-export async function updateBookingStatus(id: string, status: BookingStatus) {
-  await verifySession(); // ← завжди першим рядком
-  // ...
-}
-```
-
-### Session (JWT + cookie)
-
-```ts
-// src/lib/auth/session.ts — import 'server-only'
-// Jose: HS256, exp: 7d
-// encrypt(payload) / decrypt(token)
-
-// src/lib/auth/cookies.ts — import 'server-only'
-// createSession({ userId, role })
-// deleteSession()
-// updateSession()   ← продовжити при активності
-
-// Cookie параметри (обов'язково):
-// httpOnly: true, secure: true, sameSite: 'lax', expires: 7d
-```
-
-### Залежності для auth
-
-```bash
-npm install jose bcryptjs
-npm install -D @types/bcryptjs
-# bcrypt cost factor: 12
-# SESSION_SECRET= (openssl rand -base64 32)
-```
-
-### Змінні середовища для auth
-
-```env
-SESSION_SECRET="згенерований_рядок_32_символи"
-```
-
----
-
-## Server Actions — конвенції
-
-Усі мутації через Server Actions. Розташування: поруч з feature (не в окремій папці `/actions`).
-
-```ts
-// Шаблон кожного Server Action:
-"use server";
-
-export async function someAction(prevState: SomeState, formData: FormData): Promise<SomeState> {
-  // 1. Перевірка сесії (якщо захищена дія)
-  await verifySession();
-
-  // 2. Валідація через Zod (safeParse, не parse)
-  const validated = schema.safeParse(Object.fromEntries(formData));
-  if (!validated.success) {
-    return { errors: validated.error.flatten().fieldErrors };
-  }
-
-  // 3. Мутація БД
-  await prisma.model.create({ data: validated.data });
-
-  // 4. Інвалідація кешу
-  revalidateTag(CACHE_TAGS.relevant);
-
-  // 5. redirect() — поза try/catch!
-  return { success: true };
-}
-```
-
-**Client Component з useActionState:**
-
-```tsx
-"use client";
-const [state, action, isPending] = useActionState(someAction, initialState);
-// <form action={action}> — не onSubmit
-// <button disabled={isPending}>
-```
-
----
-
-## Fetching та Кешування
-
-Офіційна документація: [Caching and Revalidating](https://nextjs.org/docs/app/guides/caching-without-cache-components)
-
-### Два інструменти
-
-| Інструмент       | Коли                                      | Приклад              |
-| ---------------- | ----------------------------------------- | -------------------- |
-| `unstable_cache` | Між запитами, ISR, on-demand revalidation | Services, Reviews    |
-| `React.cache()`  | Дедуплікація в рамках render pass         | DAL функції, getUser |
-
-```ts
-// src/lib/db/services.ts — import 'server-only'
-export const getActiveServices = unstable_cache(
-  async () =>
-    prisma.service.findMany({
-      where: { isActive: true },
-      orderBy: { order: "asc" },
-    }),
-  ["active-services"],
-  { tags: ["services"], revalidate: 3600 },
-);
-```
-
-### Паралельне завантаження в RSC
-
-```ts
-// Завжди Promise.all — не sequential await
-const [services, reviews] = await Promise.all([getActiveServices(), getVisibleReviews()]);
-```
-
-### Streaming з Suspense
-
-```tsx
-// Секції стрімляться незалежно
-<Suspense fallback={<ServicesSkeleton />}>
-  <ServicesSection />
-</Suspense>
-<Suspense fallback={<ReviewsSkeleton />}>
-  <ReviewsSection />
-</Suspense>
-```
-
-### Revalidation після мутацій
-
-```ts
-// src/lib/cache-tags.ts
-export const CACHE_TAGS = {
-  services: "services", // main + /services/**
-  reviews: "reviews", // main
-  bookings: "bookings", // admin/bookings
-} as const;
-
-// Після мутації:
-revalidateTag(CACHE_TAGS.services); // краще за revalidatePath
-```
-
-### Admin сторінки — завжди динамічні
-
-```ts
-// Всі (admin) сторінки:
-export const dynamic = "force-dynamic";
-```
-
----
-
-## Локалізація (next-intl)
-
-URL структура: `/uk/...` та `/en/...`
-
-```ts
-// src/lib/i18n/routing.ts
-export const routing = defineRouting({
-  locales: ["uk", "en"],
-  defaultLocale: "uk",
-  localePrefix: "always",
-});
-
-// src/lib/i18n/navigation.ts — ВИКОРИСТОВУВАТИ ЗАМІСТЬ next/navigation
-export const { Link, redirect, usePathname, useRouter } = createNavigation(routing);
-```
-
-**Правило**: Ніколи не хардкодити текст в компонентах. Тільки через `useTranslations()` (client) або `getTranslations()` (server).
-
-```ts
-// Server Component:
-const t = await getTranslations("section");
-
-// Client Component:
-const t = useTranslations("section");
-```
-
-Ключі у форматі `section.key`, наприклад: `hero.title`, `booking.submit`.
-
----
-
-## Теми (MUI + next-themes)
-
-```ts
-// src/theme/index.ts
-export const lightTheme = createTheme({
-  palette: {
-    mode: "light",
-    primary: { main: "#CC0000" }, // Tesla Red
-    secondary: { main: "#1A1A1A" },
-    background: { default: "#F5F5F5", paper: "#FFFFFF" },
-  },
-});
-
-export const darkTheme = createTheme({
-  palette: {
-    mode: "dark",
-    primary: { main: "#CC0000" },
-    secondary: { main: "#E5E5E5" },
-    background: { default: "#0A0A0A", paper: "#141414" },
-  },
-});
-```
-
-**MuiThemeProvider** обов'язково обгортати у `AppRouterCacheProvider` з `@mui/material-nextjs/v15-appRouter` — усуває Emotion flash при SSR.
-
-Зберігання теми: `localStorage` + cookie для SSR (через `next-themes`).
-
----
-
-## Providers — архітектура
-
-```tsx
-// src/components/providers/AppProviders.tsx — 'use client'
-// Єдиний клієнтський кордон для всіх провайдерів
-<SessionContext.Provider value={session}>
-  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-    <MuiThemeProvider>
-      {" "}
-      // AppRouterCacheProvider + ThemeProvider
-      <LenisProvider>
-        {" "}
-        // smooth scroll з proper cleanup
-        {children}
-      </LenisProvider>
-    </MuiThemeProvider>
-  </ThemeProvider>
-</SessionContext.Provider>;
-
-// src/app/[locale]/layout.tsx — Server Component (без 'use client'!)
-const messages = await getMessages();
-return (
-  <html lang={locale} suppressHydrationWarning>
-    <body>
-      <NextIntlClientProvider messages={messages}>
-        <AppProviders session={session}>{children}</AppProviders>
-      </NextIntlClientProvider>
-    </body>
-  </html>
-);
-```
-
----
-
-## Server / Client boundaries
-
-**Правило: "push client down"** — компонент стає Client лише якщо потребує хуків, browser APIs, обробників подій або анімаційних бібліотек.
-
-| Server Components (RSC)   | Client Components            |
-| ------------------------- | ---------------------------- |
-| page.tsx, layout.tsx      | BookingForm (useActionState) |
-| ServicesList, ServiceCard | HeroScene (R3F, GSAP)        |
-| ReviewCard, Footer        | HeroParticles (canvas)       |
-| MapSection (shell)        | MapClient (Google Maps)      |
-| Stats (дані з БД)         | ReviewsCarousel (Swiper)     |
-| HowItWorksSection         | Header (nav state)           |
-
----
-
-## Анімація — Правила та Конвенції
-
-- **Framer Motion** — переходи між сторінками та scroll-reveal
-- **GSAP + useGSAP hook** — Hero секція та pin-анімації (НЕ useEffect!)
-- **Three.js/React Three Fiber** — тільки 3D модель батареї
-- **Lenis** — smooth scroll, ініціалізується в `LenisProvider` з RAF cleanup
-- `prefers-reduced-motion` — завжди перевіряти
-
-### GSAP — обов'язково useGSAP
-
-```ts
-// ❌ НЕ ПРАВИЛЬНО — memory leak в StrictMode
-useEffect(() => { gsap.fromTo('.hero-text', ...) })
-
-// ✅ ПРАВИЛЬНО
-import { useGSAP } from '@gsap/react'
-useGSAP(() => {
-  gsap.fromTo('.hero-text', { y: 50, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.1 })
-}, { scope: containerRef })
-```
-
-### 3D батарея — Suspense + placeholder
-
-```tsx
-// ❌ БЕЗ placeholder → CLS
-const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false });
-
-// ✅ З placeholder → нуль CLS
-const HeroScene = dynamic(() => import("./HeroScene"), {
-  ssr: false,
-  loading: () => <BatteryPlaceholder />, // точний розмір як Canvas
-});
-```
-
-**Правило**: Тільки один `<Canvas>` на сторінку. Захист через `CanvasGuard` context.
-
-### Заборонено
-
-- Не використовувати `animate` без `initial` у Framer Motion
-- Не запускати GSAP до mount — тільки `useGSAP` або `useEffect`
-- Три.js сцена — тільки один `<Canvas>` на сторінку
-- GSAP без cleanup → завжди через `useGSAP`
-
----
-
-## Google Maps — Карта і Маршрут
-
-```tsx
-// src/components/features/map/MapClient.tsx — 'use client'
-// @react-google-maps/api
-// MapSection.tsx (RSC) → MapClient.tsx (client, dynamic import)
-// API ключ: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-// Directions API — маршрут від поточної геолокації
-```
-
----
-
-## Форма запису — Stepper (3 кроки)
-
-**Крок 1 — Автомобіль**: Модель Tesla (Model 3 / Y / S / X / Cybertruck), рік, опис проблеми
-**Крок 2 — Дата і час**: Вибір дати (MUI DatePicker), вибір часового слоту
-**Крок 3 — Контакти**: Ім'я, телефон, email, підтвердження та відправка
-
-- Валідація: **Server-side через Zod** у Server Action (не react-hook-form!)
-- Client: `useActionState` + `<form action={action}>`
-- Після відправки: success-анімація (Framer Motion), email клієнту
-
----
-
-## Сторінки та секції — Порядок на головній
-
-1. `<Hero>` — 3D батарея + частинки + заголовок + CTA кнопка
-2. `<Stats>` — Лічильники (кількість ремонтів, гарантія, досвід)
-3. `<Services>` — Картки послуг з іконками та цінами
-4. `<HowItWorks>` — Горизонтальний scroll (pin) — 4 кроки ремонту
-5. `<WhyUs>` — Переваги сервісу
-6. `<Reviews>` — Відгуки клієнтів (Swiper carousel)
-7. `<BookingCTA>` — Банер із закликом до дії
-8. `<Map>` — Google Map + адреса + контакти
-9. `<Footer>` — Лінки, соцмережі, копірайт
-
----
-
-## Конвенції коду
-
-### TypeScript
-
-- Strict mode увімкнений + `noUncheckedIndexedAccess: true`
-- Ніяких `any` — використовувати `unknown` або точні типи
-- Всі props компонентів мають інтерфейси
-- `import 'server-only'` у всіх файлах що містять Prisma або secrets
-
-### Компоненти
-
-- Функціональні компоненти, `export default`
-- Іменування: PascalCase для компонентів, camelCase для функцій
-- Один компонент — один файл
-- Feature-based організація: все що стосується booking в `features/booking/`
-
-### Server Components vs Client Components
-
-```ts
-// Server Component (за замовчуванням) — читає БД, getTranslations, generateMetadata
-// Client Component ('use client') — useState, useEffect, browser API, обробники подій
-
-// Паттерн: RSC shell → передає дані → Client leaf
-// page.tsx (RSC) → List (RSC) → InteractiveCard ('use client')
-```
-
-### CSS / Стилі
-
-- Тільки MUI `sx` prop або `styled()` — не окремі CSS файли
-- Брейкпоінти через MUI theme: `xs`, `sm`, `md`, `lg`, `xl`
-- Не хардкодити кольори — тільки через `theme.palette`
-
-### Git commits
-
-- `feat:` — нова функціональність
-- `fix:` — виправлення
-- `style:` — стилі без логіки
-- `refactor:` — рефакторинг
-- `chore:` — конфіги, залежності
-
----
-
-## Middleware
-
-```ts
-// src/middleware.ts — два завдання:
-// 1. next-intl локалізація
-// 2. Optimistic auth check для /admin routes (без DB запиту)
-
-export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|glb|gltf)).*)",
-  ],
-};
+enum Role { ADMIN SUPERADMIN }
 ```
 
 ---
@@ -630,22 +770,17 @@ export const config = {
 ## next.config.ts
 
 ```ts
-import createNextIntlPlugin from "next-intl/plugin";
-
-const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts");
-
 const nextConfig = {
-  output: "standalone", // обов'язково для Docker
-  serverExternalPackages: ["@prisma/client"],
+  output: 'standalone',
+  serverExternalPackages: ['@prisma/client'],
   experimental: {
-    typedRoutes: true, // типізовані Link href
+    typedRoutes: true,
   },
   images: {
-    remotePatterns: [{ hostname: "res.cloudinary.com" }],
+    remotePatterns: [{ hostname: 'res.cloudinary.com' }],
   },
-};
-
-export default withNextIntl(nextConfig);
+}
+export default nextConfig
 ```
 
 ---
@@ -669,26 +804,14 @@ export default withNextIntl(nextConfig);
 ## Змінні середовища (.env.local)
 
 ```env
-# База даних
 DATABASE_URL="postgresql://..."
-
-# Auth (власна реалізація, НЕ NextAuth)
 SESSION_SECRET="згенерований_рядок_32_символи"
-# Генерація: openssl rand -base64 32
-
-# Google Maps
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="..."
-
-# Email (Resend)
 RESEND_API_KEY="..."
 RESEND_FROM_EMAIL="noreply@yourdomain.com"
 ADMIN_EMAIL="admin@yourdomain.com"
-
-# Telegram Bot
 TELEGRAM_BOT_TOKEN="..."
 TELEGRAM_CHAT_ID="..."
-
-# Cloudinary (фото кейсів)
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="..."
 CLOUDINARY_API_KEY="..."
 CLOUDINARY_API_SECRET="..."
@@ -696,18 +819,27 @@ CLOUDINARY_API_SECRET="..."
 
 ---
 
+## Конвенції коду
+
+- `import 'server-only'` у всіх файлах з Prisma, auth або secrets
+- Ніяких `any` — `unknown` або точні типи
+- Feature-based компоненти: `features/booking/`, `features/services/` тощо
+- Стилі: тільки MUI `sx` prop або `styled()`, кольори тільки через `theme.palette`
+- `getDictionary` — тільки в RSC, Client Components отримують `dict` через props
+- Git: `feat:` / `fix:` / `style:` / `refactor:` / `chore:`
+
+---
+
 ## Деплой — Docker
 
-### Dockerfile (multi-stage build)
+### Dockerfile
 
 ```dockerfile
-# Stage 1: deps
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --frozen-lockfile
 
-# Stage 2: dev (окремий для розробки)
 FROM node:20-alpine AS dev
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -715,7 +847,6 @@ COPY package.json ./
 EXPOSE 3000
 CMD ["npm", "run", "dev"]
 
-# Stage 3: builder
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -724,7 +855,6 @@ RUN npx prisma generate
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-# Stage 4: runner (prod)
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
@@ -744,207 +874,50 @@ ENV HOSTNAME="0.0.0.0"
 CMD ["node", "server.js"]
 ```
 
-### docker-compose.yml (розробка)
+### docker-compose.yml (dev)
 
 ```yaml
-version: "3.9"
-
 services:
   app:
-    build:
-      context: .
-      target: dev # ← окремий dev stage
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/.next
-    ports:
-      - "3000:3000"
-    env_file:
-      - .env.local
-    environment:
-      - WATCHPACK_POLLING=true # hot reload в Docker на macOS/Windows
-    depends_on:
-      postgres:
-        condition: service_healthy
-
+    build: { context: ., target: dev }
+    volumes: ['.:/app', '/app/node_modules', '/app/.next']
+    ports: ['3000:3000']
+    env_file: [.env.local]
+    environment: [WATCHPACK_POLLING=true]
+    depends_on: { postgres: { condition: service_healthy } }
   postgres:
     image: postgres:16-alpine
-    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-tesla}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
       POSTGRES_DB: ${POSTGRES_DB:-tesladb}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    ports: ['5432:5432']
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tesla}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-tesla}']
       interval: 5s
       timeout: 5s
       retries: 5
-
 volumes:
   postgres_data:
 ```
 
-### docker-compose.prod.yml (продакшн)
-
-```yaml
-version: "3.9"
-
-services:
-  app:
-    build:
-      context: .
-      target: runner
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    env_file:
-      - .env.production
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - tesla_net
-
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - tesla_net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  nginx:
-    image: nginx:alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-    depends_on:
-      - app
-    networks:
-      - tesla_net
-
-networks:
-  tesla_net:
-    driver: bridge
-
-volumes:
-  postgres_data:
-```
-
-### nginx/nginx.conf
-
-```nginx
-events { worker_connections 1024; }
-
-http {
-  upstream nextjs {
-    server app:3000;
-  }
-
-  server {
-    listen 80;
-    server_name yourdomain.com www.yourdomain.com;
-    return 301 https://$host$request_uri;
-  }
-
-  server {
-    listen 443 ssl http2;
-    server_name yourdomain.com www.yourdomain.com;
-
-    ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
-
-    client_max_body_size 20M;
-
-    location /_next/static/ {
-      proxy_pass http://nextjs;
-      add_header Cache-Control "public, max-age=31536000, immutable";
-    }
-
-    location / {
-      proxy_pass http://nextjs;
-      proxy_http_version 1.1;
-      proxy_set_header Upgrade $http_upgrade;
-      proxy_set_header Connection 'upgrade';
-      proxy_set_header Host $host;
-      proxy_set_header X-Real-IP $remote_addr;
-      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_set_header X-Forwarded-Proto $scheme;
-      proxy_cache_bypass $http_upgrade;
-    }
-  }
-}
-```
-
-### .dockerignore
-
-```
-node_modules
-.next
-.git
-.env*
-!.env.example
-npm-debug.log*
-README.md
-.DS_Store
-```
-
-### DATABASE_URL для Docker
-
-У `.env.production`:
-
-```env
-DATABASE_URL="postgresql://tesla:secret@postgres:5432/tesladb"
-#                                        ^^^^^^^^
-#                          ім'я сервісу з docker-compose, не localhost
-```
-
----
-
-## Команди
+### Команди
 
 ```bash
-# Локальна розробка
+# Dev
 npm run dev
-npm run build
-npm run lint
 npx prisma studio
 npx prisma migrate dev --name <name>
-npx prisma db seed
 
-# Перший адмін (seed):
-# bcrypt hash з cost factor 12, зберегти в User.password
-
-# Docker розробка
+# Docker dev
 docker compose up --build
-docker compose exec app npx prisma migrate dev --name <name>
-docker compose exec app npx prisma studio
 
-# Docker продакшн
+# Docker prod
 docker compose -f docker-compose.prod.yml up --build -d
 docker compose -f docker-compose.prod.yml exec app npx prisma migrate deploy
-docker compose -f docker-compose.prod.yml exec app npx prisma db seed
-docker compose -f docker-compose.prod.yml logs -f app
 
-# SSL (Let's Encrypt на сервері)
+# SSL
 certbot certonly --standalone -d yourdomain.com
 ```
 
@@ -953,17 +926,21 @@ certbot certonly --standalone -d yourdomain.com
 ## Пакети
 
 ```bash
-# Auth (замість next-auth)
+# Локалізація
+npm install negotiator @formatjs/intl-localematcher
+npm install -D @types/negotiator
+
+# MUI v9
+npm install @mui/material @mui/material-nextjs @emotion/react @emotion/styled @emotion/cache
+
+# Auth
 npm install jose bcryptjs
 npm install -D @types/bcryptjs
 
-# MUI SSR fix
-npm install @mui/material-nextjs
-
-# GSAP хук
+# GSAP
 npm install @gsap/react
 
-# Server-only захист
+# Server-only guard
 npm install server-only
 ```
 
@@ -971,10 +948,10 @@ npm install server-only
 
 ## Важливі нотатки
 
-- **SEO**: `generateMetadata` на кожній сторінці, обидві мови, `alternates.languages`
-- **Core Web Vitals**: 3D сцена — `dynamic(() => import(...), { ssr: false, loading: () => <Placeholder/> })`
+- **SEO**: `generateMetadata` на кожній сторінці, `alternates.languages` для uk/en
+- **CWV**: 3D сцена — `dynamic(..., { ssr: false, loading: () => <Placeholder/> })`
 - **Зображення**: тільки `next/image` з явними розмірами
-- **Скелетони**: `loading.tsx` для кожного route
-- **server-only**: додавати до всіх файлів що містять Prisma, secrets або auth логіку
-- **Cloudinary**: медіа (фото кейсів) — не потрібен volume для uploads
-- **Admin seed**: `npx prisma db seed` після першого деплою для створення першого адміна
+- **Loading**: `loading.tsx` для кожного route (Skeleton UI)
+- **MUI Link**: завжди через `NextLink` wrapper (`'use client'`) при використанні з `component` prop
+- **Cloudinary**: медіа — не потрібен volume для uploads
+- **Перший адмін**: `npx prisma db seed` після першого деплою
