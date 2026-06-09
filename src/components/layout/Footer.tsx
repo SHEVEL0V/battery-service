@@ -1,12 +1,9 @@
 "use client";
 
 import { Box, Container, Stack, Typography } from "@mui/material";
+import { Dictionary } from "@/dictionaries";
 
-interface FooterProps {
-  dict: any;
-}
-
-export function Footer({ dict }: FooterProps) {
+export function Footer({ dict }: { dict: Dictionary["footer"] }) {
   return (
     <Box
       component="footer"
@@ -19,12 +16,12 @@ export function Footer({ dict }: FooterProps) {
       }}
     >
       <Container maxWidth="lg">
-        <Stack spacing={2}>
+        <Stack sx={{ gap: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            {dict.footer.description}
+            {dict.description}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {dict.footer.copyright}
+            {dict.copyright}
           </Typography>
         </Stack>
       </Container>

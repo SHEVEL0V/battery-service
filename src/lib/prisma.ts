@@ -9,7 +9,7 @@
 import "dotenv/config";
 // import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../../generated/prisma/client";
+import { PrismaClient } from "@g/prisma/client";
 
 // const adapter = new PrismaMariaDb({
 //   host: process.env.MYSQL_HOST,

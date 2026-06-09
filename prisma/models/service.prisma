@@ -1,0 +1,32 @@
+model Service {
+  id       String  @id @default(cuid())
+  slug     String  @unique
+  titleUk  String
+  titleEn  String
+  descUk   String
+  descEn   String
+  price    Int
+  duration String
+  isActive Boolean @default(true)
+  order    Int     @default(0)
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  author    String
+  rating    Int
+  textUk    String
+  textEn    String
+  carModel  String
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+}

@@ -1,0 +1,120 @@
+{
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "booking": "Booking",
+    "contacts": "Contacts",
+    "admin": "Admin"
+  },
+  "footer": {
+    "copyright": "© 2024 Tesla Battery Service. All rights reserved.",
+    "description": "Professional Tesla battery repair service"
+  },
+  "hero": {
+    "title": "Tesla Battery Repair",
+    "subtitle": "Professional service for your vehicle performance",
+    "cta": "Book Service",
+    "description": "Fast. Reliable. Guaranteed."
+  },
+  "stats": {
+    "repairs": "Repairs",
+    "warranty": "Warranty",
+    "experience": "Years Experience"
+  },
+  "services": {
+    "title": "Our Services",
+    "description": "Comprehensive range of services for your electric vehicle",
+    "services": [
+      {
+        "title": "Battery Diagnostics",
+        "desc": "Full battery health check and component inspection",
+        "price": "50$"
+      },
+      {
+        "title": "Battery Replacement",
+        "desc": "Complete battery replacement with new unit",
+        "price": "300$"
+      },
+      {
+        "title": "Module Replacement",
+        "desc": "Replace damaged battery modules",
+        "price": "100$"
+      }
+    ]
+  },
+  "howItWorks": {
+    "title": "How It Works",
+    "steps": [
+      {
+        "title": "1. Consultation",
+        "description": "We discuss your issue and perform initial diagnostics"
+      },
+      {
+        "title": "2. Diagnostics",
+        "description": "We conduct detailed inspection of all battery systems"
+      },
+      {
+        "title": "3. Repair",
+        "description": "We perform necessary repairs with quality parts"
+      },
+      {
+        "title": "4. Testing",
+        "description": "We verify functionality and provide warranty"
+      }
+    ]
+  },
+  "whyUs": {
+    "title": "Why Choose Us",
+    "reasons": [
+      { "title": "Professionals", "description": "Experienced team of specialists" },
+      { "title": "Quality", "description": "Original parts and materials" },
+      { "title": "Warranty", "description": "5 years warranty on all work" },
+      { "title": "Speed", "description": "Express service" },
+      { "title": "Price", "description": "Competitive market prices" },
+      { "title": "Service", "description": "24/7 technical support" }
+    ]
+  },
+  "reviews": {
+    "title": "Customer Reviews",
+    "reviews": [
+      {
+        "author": "Peter Ivanov",
+        "text": "Excellent work! Battery like new. I recommend to everyone.",
+        "car": "Tesla Model 3"
+      },
+      {
+        "author": "Maria Sidorenko",
+        "text": "Fast, professional, fair prices. Very satisfied.",
+        "car": "Tesla Model Y"
+      },
+      {
+        "author": "Andrii Kovalenko",
+        "text": "Good service, skilled specialists. Will come again.",
+        "car": "Tesla Model S"
+      }
+    ]
+  },
+  "bookingCTA": {
+    "title": "Ready to Restore Your Battery?",
+    "description": "Book a free diagnostic today. Our team will help your electric vehicle regain full power.",
+    "button": "Book Now"
+  },
+  "map": {
+    "title": "Find Us",
+    "description": "Google Map (Coming Soon",
+    "address": "Address",
+    "addressValue": "123 Example St, Kyiv, Ukraine",
+    "phone": "Phone",
+    "phoneValue": "+38 (044) 123-45-67",
+    "hours": "Working Hours",
+    "hoursValue": "Mon-Fri: 9:00 - 18:00\nSat-Sun: 10:00 - 16:00"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "close": "Close"
+  }
+}

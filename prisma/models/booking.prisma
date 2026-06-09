@@ -1,0 +1,20 @@
+model Booking {
+  id        String        @id @default(cuid())
+  name      String
+  phone     String
+  email     String
+  carModel  String
+  year      Int
+  message   String?
+  status    BookingStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
