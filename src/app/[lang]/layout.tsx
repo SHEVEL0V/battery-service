@@ -23,10 +23,7 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
   return (
     <html lang={lang} className={manrope.variable} suppressHydrationWarning>
       <head>
-        <InitColorSchemeScript
-          attribute="data-mui-color-scheme"
-          defaultMode="dark"
-        />
+        <InitColorSchemeScript attribute="data-mui-color-scheme" defaultMode="dark" />
       </head>
       <body>
         <AppProviders>{children}</AppProviders>

@@ -3,12 +3,12 @@
 import { useActionState, useState } from "react";
 import { Box, Container, Paper, Step, StepLabel, Stepper } from "@mui/material";
 import type { Dictionary } from "@/dictionaries";
-import { createBooking, type BookingState } from "./actions";
+import { createBooking, type BookingState } from "../actions";
 import { BookingStepCar } from "./BookingStepCar";
 import { BookingStepDate } from "./BookingStepDate";
 import { BookingStepContact } from "./BookingStepContact";
 import { BookingSuccess } from "./BookingSuccess";
-import type { BookingDraft, BookingStep } from "./types";
+import type { BookingDraft, BookingStep } from "../types";
 
 const initialState: BookingState = {};
 

@@ -1,9 +1,9 @@
 "use client";
 import { Box, Button, Container, Stack } from "@mui/material";
 import Link from "next/link";
-import { ThemeToggle } from "../ui/ThemeToggle";
-import routes from "../../routes";
-import { Dictionary } from "@/dictionaries";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import type { Dictionary } from "@/dictionaries";
+import routes from "@/lib/routing/routes";
 import LocaleSwitcher from "@/components/ui/LocaleSwitcher";
 
 export function Header({ dict }: { dict: Dictionary["nav"] }) {

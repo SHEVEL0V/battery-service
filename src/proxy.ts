@@ -3,16 +3,14 @@ import type { NextRequest } from "next/server";
 import { match } from "@formatjs/intl-localematcher";
 import Negotiator from "negotiator";
 import { decrypt } from "@/lib/auth/session";
-
-const locales = ["uk", "en"];
-const defaultLocale = "uk";
+import { defaultLocale, locales } from "@/config/locales";
 
 function getLocale(request: NextRequest): string {
   const acceptLanguage = request.headers.get("accept-language") ?? "";
   const headers = { "accept-language": acceptLanguage };
   const languages = new Negotiator({ headers }).languages();
   try {
-    return match(languages, locales, defaultLocale);
+    return match(languages, [...locales], defaultLocale);
   } catch {
     return defaultLocale;
   }

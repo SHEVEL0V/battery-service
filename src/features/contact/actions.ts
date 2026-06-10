@@ -1,9 +1,9 @@
 "use server";
 
 import { z } from "zod";
-import prisma from "@/lib/prisma";
-import { sendEmail } from "@/lib/mail";
-import { sendTelegramNotification } from "@/lib/telegram";
+import prisma from "@/lib/db/prisma";
+import { sendEmail } from "@/lib/integrations/mail";
+import { sendTelegramNotification } from "@/lib/integrations/telegram";
 import { contactSchema } from "./schema";
 
 export interface ContactState {

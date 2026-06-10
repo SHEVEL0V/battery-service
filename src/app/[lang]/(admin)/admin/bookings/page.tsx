@@ -1,6 +1,6 @@
 import { Box, Container, Typography } from "@mui/material";
-import prisma from "@/lib/prisma";
-import { BookingsTable } from "@/components/features/admin/BookingsTable";
+import prisma from "@/lib/db/prisma";
+import { BookingsTable } from "@/features/admin/BookingsTable";
 
 export const dynamic = "force-dynamic";
 

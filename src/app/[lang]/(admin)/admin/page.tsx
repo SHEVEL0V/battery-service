@@ -1,5 +1,5 @@
 import { Box, Container, Grid, Paper, Typography } from "@mui/material";
-import prisma from "@/lib/prisma";
+import prisma from "@/lib/db/prisma";
 
 export const dynamic = "force-dynamic";
 

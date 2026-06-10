@@ -1,8 +1,8 @@
 import "server-only";
 
 import { unstable_cache } from "next/cache";
-import prisma from "@/lib/prisma";
-import { CACHE_TAGS } from "@/lib/cache-tags";
+import prisma from "@/lib/db/prisma";
+import { CACHE_TAGS } from "@/lib/cache/cache-tags";
 
 export const getVisibleReviews = unstable_cache(
   async () =>

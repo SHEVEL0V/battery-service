@@ -1,7 +1,7 @@
 import { Box, Container, Paper, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
 import { getDictionary, hasLocale } from "@/dictionaries";
-import { LoginForm } from "@/components/features/auth/LoginForm";
+import { LoginForm } from "@/features/auth/LoginForm";
 
 export default async function LoginPage({ params }: PageProps<"/[lang]/login">) {
   const { lang } = await params;

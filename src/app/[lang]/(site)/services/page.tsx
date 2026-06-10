@@ -1,8 +1,10 @@
 import { Box, Container, Grid, Stack, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
 import { getDictionary, hasLocale } from "@/dictionaries";
-import { getActiveServices } from "@/components/features/services/queries";
-import { ServiceListCard } from "@/components/features/services/ServiceListCard";
+import { getActiveServices } from "@/features/services/queries";
+import { ServiceListCard } from "@/features/services/components/ServiceListCard";
+
+export const dynamic = "force-dynamic";
 
 export default async function ServicesPage({ params }: PageProps<"/[lang]/services">) {
   const { lang } = await params;
@@ -10,7 +12,7 @@ export default async function ServicesPage({ params }: PageProps<"/[lang]/servic
 
   const [{ servicesPage }, services] = await Promise.all([
     getDictionary(lang),
-    getActiveServices(),
+    getActiveServices(lang),
   ]);
 
   return (

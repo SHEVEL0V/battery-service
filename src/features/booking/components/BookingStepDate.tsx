@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Box, Button, Stack, TextField, Typography } from "@mui/material";
 import type { Dictionary } from "@/dictionaries";
-import type { BookingDateData } from "./types";
+import type { BookingDateData } from "../types";
 
 interface Props {
   dict: Dictionary["booking"];

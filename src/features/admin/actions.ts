@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidateTag } from "next/cache";
-import prisma from "@/lib/prisma";
+import prisma from "@/lib/db/prisma";
 import { verifySession } from "@/lib/auth/dal";
-import { CACHE_TAGS } from "@/lib/cache-tags";
+import { CACHE_TAGS } from "@/lib/cache/cache-tags";
 import type { BookingStatus } from "@/types";
 
 export async function updateBookingStatus(id: string, status: BookingStatus) {

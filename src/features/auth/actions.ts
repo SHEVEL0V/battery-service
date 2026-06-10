@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
-import prisma from "@/lib/prisma";
+import prisma from "@/lib/db/prisma";
 import { createSession } from "@/lib/auth/cookies";
 import { hasLocale, defaultLocale } from "@/dictionaries";
 import { loginSchema } from "./schema";

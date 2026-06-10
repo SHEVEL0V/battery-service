@@ -2,11 +2,11 @@ import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getDictionary, hasLocale } from "@/dictionaries";
-import { getServiceBySlug } from "@/components/features/services/queries";
-import { formatPrice } from "@/components/features/services/format";
+import { getServiceBySlug } from "@/features/services/queries";
+import { formatPrice } from "@/features/services/format";
 import NextLink from "@/components/ui/NextLink";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -14,7 +14,7 @@ export async function generateMetadata({
   const { lang, slug } = await params;
   if (!hasLocale(lang)) return {};
 
-  const service = await getServiceBySlug(slug);
+  const service = await getServiceBySlug(slug, lang);
   if (!service) return {};
 
   const title = lang === "uk" ? service.titleUk : service.titleEn;
@@ -33,15 +33,13 @@ export async function generateMetadata({
   };
 }
 
-export default async function ServiceDetailPage({
-  params,
-}: PageProps<"/[lang]/services/[slug]">) {
+export default async function ServiceDetailPage({ params }: PageProps<"/[lang]/services/[slug]">) {
   const { lang, slug } = await params;
   if (!hasLocale(lang)) notFound();
 
   const [{ servicesPage, bookingCTA }, service] = await Promise.all([
     getDictionary(lang),
-    getServiceBySlug(slug),
+    getServiceBySlug(slug, lang),
   ]);
 
   if (!service) notFound();

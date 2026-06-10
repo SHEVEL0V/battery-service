@@ -1,6 +1,6 @@
 import { Box, Button, Stack, TextField, Typography } from "@mui/material";
 import type { Dictionary } from "@/dictionaries";
-import type { BookingState } from "./actions";
+import type { BookingState } from "../actions";
 
 interface Props {
   dict: Dictionary["booking"];

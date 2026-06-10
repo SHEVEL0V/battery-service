@@ -2,7 +2,7 @@ import { Button, Paper, Stack, Typography } from "@mui/material";
 import NextLink from "@/components/ui/NextLink";
 import type { Dictionary, Locale } from "@/dictionaries";
 import type { Service } from "@/types";
-import { formatPrice } from "./format";
+import { formatPrice } from "../format";
 
 interface Props {
   service: Service;

@@ -2,8 +2,7 @@
 
 import { Box } from "@mui/material";
 
-// Placeholder battery visualization. Swap for an R3F <Canvas> scene once
-// three/@react-three/fiber are added to the project.
+// Placeholder battery visualization.
 export function HeroScene() {
   return (
     <Box

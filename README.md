@@ -2,7 +2,7 @@
 
 Сайт сервісу ремонту батарей Tesla: інформація про послуги, онлайн-запис, контакти з картою та адмін-панель.
 
-**Стек**: Next.js (App Router) · TypeScript · MUI · Prisma · PostgreSQL · Framer Motion · GSAP · Three.js/R3F
+**Стек**: Next.js (App Router) · TypeScript · MUI · Prisma · PostgreSQL · Framer Motion
 
 ## Запуск
 

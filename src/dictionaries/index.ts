@@ -1,13 +1,12 @@
 import "server-only";
+import { defaultLocale, locales, type Locale } from "@/config/locales";
 
 export type Dictionary = typeof import("./en.json");
-
-export const locales = ["uk", "en"] as const;
-export type Locale = (typeof locales)[number];
-export const defaultLocale: Locale = "uk";
+export { defaultLocale, locales };
+export type { Locale };
 
 const dictionaries: Record<Locale, () => Promise<Dictionary>> = {
-  uk: () => import("./ua.json").then((module) => module.default as Dictionary),
+  uk: () => import("./uk.json").then((module) => module.default as Dictionary),
   en: () => import("./en.json").then((module) => module.default),
 };
 

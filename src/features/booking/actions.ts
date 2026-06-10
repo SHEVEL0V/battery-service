@@ -2,10 +2,10 @@
 
 import { z } from "zod";
 import { revalidateTag } from "next/cache";
-import prisma from "@/lib/prisma";
-import { sendEmail } from "@/lib/mail";
-import { sendTelegramNotification } from "@/lib/telegram";
-import { CACHE_TAGS } from "@/lib/cache-tags";
+import prisma from "@/lib/db/prisma";
+import { sendEmail } from "@/lib/integrations/mail";
+import { sendTelegramNotification } from "@/lib/integrations/telegram";
+import { CACHE_TAGS } from "@/lib/cache/cache-tags";
 import { bookingSchema } from "./schema";
 
 export interface BookingState {
