@@ -11,7 +11,7 @@ export interface Booking {
   email: string
   carModel: string
   year: number
-  message?: string
+  message: string | null
   status: BookingStatus
   createdAt: Date
   updatedAt: Date

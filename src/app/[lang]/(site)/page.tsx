@@ -1,11 +1,11 @@
 import { Hero } from "@/components/features/hero/Hero";
-import { Stats } from "@/components/features/Stats";
-import { Services } from "@/components/features/Services";
-import { HowItWorks } from "@/components/features/HowItWorks";
-import { WhyUs } from "@/components/features/WhyUs";
-import { Reviews } from "@/components/features/Reviews";
+import { Stats } from "@/components/features/stats/Stats";
+import { ServicesList } from "@/components/features/services/ServicesList";
+import { HowItWorks } from "@/components/features/howItWorks/HowItWorks";
+import { WhyUs } from "@/components/features/whyUs/WhyUs";
+import { ReviewsCarousel } from "@/components/features/reviews/ReviewsCarousel";
 import { BookingCTA } from "@/components/features/booking/BookingCTA";
-import { Map } from "@/components/features/map/Map";
+import { MapSection } from "@/components/features/map/MapSection";
 import { notFound } from "next/navigation";
 import { getDictionary, hasLocale } from "@/dictionaries";
 
@@ -21,12 +21,12 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
     <main>
       <Hero dict={hero} />
       <Stats dict={stats} />
-      <Services dict={services} />
+      <ServicesList dict={services} />
       <HowItWorks dict={howItWorks} />
       <WhyUs dict={whyUs} />
-      <Reviews dict={reviews} />
+      <ReviewsCarousel dict={reviews} />
       <BookingCTA dict={bookingCTA} />
-      <Map dict={map} />
+      <MapSection dict={map} />
     </main>
   );
 }

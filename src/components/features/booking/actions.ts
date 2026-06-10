@@ -1,83 +1,68 @@
-import { NextRequest, NextResponse } from "next/server";
+"use server";
+
 import { z } from "zod";
-import prisma from "@/src/lib/prisma";
-import { sendEmail } from "@/src/lib/mail";
-import { sendTelegramNotification } from "@/src/lib/telegram";
-import type { ApiResponse } from "@/src/types";
+import { revalidateTag } from "next/cache";
+import prisma from "@/lib/prisma";
+import { sendEmail } from "@/lib/mail";
+import { sendTelegramNotification } from "@/lib/telegram";
+import { CACHE_TAGS } from "@/lib/cache-tags";
+import { bookingSchema } from "./schema";
 
-const bookingSchema = z.object({
-  name: z.string().min(2),
-  phone: z.string().min(10),
-  email: z.string().email(),
-  carModel: z.string(),
-  year: z.number().int(),
-  message: z.string().optional(),
-});
-
-export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse>> {
-  try {
-    const body = await req.json();
-    const validated = bookingSchema.parse(body);
-
-    const booking = await prisma.booking.create({
-      data: validated,
-    });
-
-    // Send email to client
-    const clientEmailHtml = `
-      <h2>Спасибо за вашу заявку!</h2>
-      <p>Мы получили вашу заявку на ремонт батареи.</p>
-      <p>Наша команда свяжется с вами в ближайшее время.</p>
-      <p>ID заявки: ${booking.id}</p>
-    `;
-    await sendEmail(validated.email, "Подтверждение заявки", clientEmailHtml);
-
-    // Send notification to admin
-    const adminMessage = `
-      <b>Новая заявка на ремонт батареи!</b>
-      Имя: ${validated.name}
-      Телефон: ${validated.phone}
-      Email: ${validated.email}
-      Модель: ${validated.carModel} (${validated.year})
-      Сообщение: ${validated.message || "Нет"}
-    `;
-    await sendTelegramNotification(adminMessage);
-
-    return NextResponse.json({
-      success: true,
-      data: booking,
-    });
-  } catch (error) {
-    console.error("Booking error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to create booking",
-      },
-      { status: 400 },
-    );
-  }
+export interface BookingState {
+  success?: boolean;
+  error?: string;
+  errors?: Partial<Record<keyof z.infer<typeof bookingSchema>, string[]>>;
 }
 
-export async function GET(): Promise<NextResponse<ApiResponse>> {
-  try {
-    const bookings = await prisma.booking.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 100,
-    });
+export async function createBooking(
+  _prevState: BookingState,
+  formData: FormData,
+): Promise<BookingState> {
+  const validated = bookingSchema.safeParse({
+    name: formData.get("name"),
+    phone: formData.get("phone"),
+    email: formData.get("email"),
+    carModel: formData.get("carModel"),
+    year: formData.get("year"),
+    date: formData.get("date"),
+    message: formData.get("message") || undefined,
+  });
 
-    return NextResponse.json({
-      success: true,
-      data: bookings,
-    });
-  } catch (error) {
-    console.error("Get bookings error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to fetch bookings",
-      },
-      { status: 500 },
-    );
+  if (!validated.success) {
+    return { errors: validated.error.flatten().fieldErrors };
   }
+
+  const { date, ...bookingData } = validated.data;
+
+  const booking = await prisma.booking.create({
+    data: {
+      ...bookingData,
+      message: bookingData.message
+        ? `${bookingData.message}\n\nБажана дата: ${date}`
+        : `Бажана дата: ${date}`,
+    },
+  });
+
+  const clientEmailHtml = `
+    <h2>Дякуємо за вашу заявку!</h2>
+    <p>Ми отримали вашу заявку на ремонт батареї.</p>
+    <p>Наша команда зв'яжеться з вами найближчим часом.</p>
+    <p>ID заявки: ${booking.id}</p>
+  `;
+  await sendEmail(validated.data.email, "Підтвердження заявки", clientEmailHtml);
+
+  const adminMessage = `
+    <b>Нова заявка на ремонт батареї!</b>
+    Ім'я: ${validated.data.name}
+    Телефон: ${validated.data.phone}
+    Email: ${validated.data.email}
+    Модель: ${validated.data.carModel} (${validated.data.year})
+    Бажана дата: ${date}
+    Повідомлення: ${validated.data.message ?? "Немає"}
+  `;
+  await sendTelegramNotification(adminMessage);
+
+  revalidateTag(CACHE_TAGS.bookings, "default");
+
+  return { success: true };
 }

@@ -37,10 +37,7 @@ src/
 │   │   │       └── loading.tsx
 │   │   ├── (auth)/
 │   │   │   └── login/
-│   │   │       ├── page.tsx
-│   │   │       ├── _actions.ts      ← login() Server Action ('use server')
-│   │   │       └── _components/
-│   │   │           └── LoginForm.tsx ← 'use client' + useActionState
+│   │   │       └── page.tsx         ← RSC shell, рендерить LoginForm
 │   │   └── (admin)/
 │   │       ├── layout.tsx           ← verifySession() auth guard
 │   │       └── admin/
@@ -75,6 +72,14 @@ src/
 │   │   ├── map/
 │   │   │   ├── MapSection.tsx       ← RSC shell
 │   │   │   └── MapClient.tsx        ← Google Maps (client)
+│   │   ├── contact/
+│   │   │   ├── ContactForm.tsx      ← useActionState (client)
+│   │   │   ├── actions.ts           ← submitContact() 'use server'
+│   │   │   └── schema.ts            ← Zod схема
+│   │   ├── auth/
+│   │   │   ├── LoginForm.tsx        ← useActionState (client)
+│   │   │   ├── actions.ts           ← login() 'use server'
+│   │   │   └── schema.ts            ← Zod схема
 │   │   └── admin/
 │   │       ├── BookingsTable.tsx    ← client
 │   │       └── actions.ts           ← updateBookingStatus() 'use server'
@@ -108,7 +113,7 @@ src/
 │
 ├── prisma/schema.prisma
 ├── types/index.ts
-└── middleware.ts                    ← locale redirect + optimistic auth check
+└── proxy.ts                         ← locale redirect + optimistic auth check
 ```
 
 ---
@@ -238,10 +243,12 @@ export function BookingForm({ dict }: Props) {
 }
 ```
 
-### Middleware — locale redirect
+### Proxy — locale redirect + auth
+
+> **Next.js 16**: Middleware перейменовано в **Proxy**. Файл: `src/proxy.ts`, функція: `export function proxy(...)` або `export default function proxy(...)`.
 
 ```ts
-// src/middleware.ts
+// src/proxy.ts
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { match } from '@formatjs/intl-localematcher'
@@ -262,7 +269,7 @@ function getLocale(request: NextRequest): string {
   }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // 1. Locale redirect
@@ -276,7 +283,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(request.nextUrl)
   }
 
-  // 2. Optimistic auth check для /admin
+  // 2. Optimistic auth check для /admin (без DB)
   const isAdminRoute = pathname.includes('/admin')
   const isAuthRoute  = pathname.includes('/login')
 
@@ -395,43 +402,55 @@ npm install @mui/material @mui/material-nextjs @emotion/react @emotion/styled @e
 
 ### theme/index.ts
 
+> **Патерн**: `extendTheme` генерує CSS-змінні для кольорів під атрибут `data-mui-color-scheme`. `InitColorSchemeScript` встановлює цей атрибут **до першого рендеру** (inline script у `<head>`), усуваючи flash.
+
 ```ts
 // src/theme/index.ts
 'use client'
-import { createTheme } from '@mui/material/styles'
-import { Inter } from 'next/font/google'
+import { extendTheme } from '@mui/material/styles'
+import { Manrope } from 'next/font/google'
 
-const inter = Inter({ subsets: ['latin', 'cyrillic'], variable: '--font-inter' })
+// Manrope — геометричний гротеск, чіткий на всіх розмірах, підтримує кирилицю
+export const manrope = Manrope({
+  subsets: ['latin', 'cyrillic'],
+  variable: '--font-manrope',
+  weight: ['300', '400', '500', '600', '700', '800'],
+  display: 'swap',
+})
 
-// cssVariables: true — MUI v9 CSS Variables (усуває SSR flickering без next-themes)
-const baseTheme = {
-  cssVariables: true,
+const theme = extendTheme({
+  colorSchemeSelector: 'data-mui-color-scheme',
+  defaultColorScheme: 'dark',
+
+  colorSchemes: {
+    light: {
+      palette: {
+        primary:    { main: '#CC0000' },
+        secondary:  { main: '#1A1A1A' },
+        background: { default: '#F5F5F5', paper: '#FFFFFF' },
+        text:       { primary: '#111111', secondary: '#555555' },
+      },
+    },
+    dark: {
+      palette: {
+        primary:    { main: '#CC0000' },
+        secondary:  { main: '#E5E5E5' },
+        background: { default: '#0D0D0D', paper: '#1A1A1A' },
+        text:       { primary: '#F0F0F0', secondary: '#A0A0A0' },
+      },
+    },
+  },
+
   typography: {
-    fontFamily: 'var(--font-inter)',
-  },
-}
-
-export const lightTheme = createTheme({
-  ...baseTheme,
-  palette: {
-    mode: 'light',
-    primary:    { main: '#CC0000' },   // Tesla Red
-    secondary:  { main: '#1A1A1A' },
-    background: { default: '#F5F5F5', paper: '#FFFFFF' },
+    fontFamily: 'var(--font-manrope), system-ui, sans-serif',
+    h1: { fontSize: '3.5rem', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1 },
+    h2: { fontSize: '2.5rem', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 },
+    h3: { fontSize: '1.75rem', fontWeight: 600, letterSpacing: '-0.01em' },
+    button: { fontWeight: 600, letterSpacing: '0.01em', textTransform: 'none' as const },
   },
 })
 
-export const darkTheme = createTheme({
-  ...baseTheme,
-  palette: {
-    mode: 'dark',
-    primary:    { main: '#CC0000' },
-    secondary:  { main: '#E5E5E5' },
-    background: { default: '#0A0A0A', paper: '#141414' },
-  },
-})
-
-export { inter }
+export default theme
 ```
 
 ### MuiThemeProvider
@@ -439,34 +458,13 @@ export { inter }
 ```tsx
 // src/components/providers/MuiThemeProvider.tsx
 'use client'
-import { useMemo, useState, useEffect } from 'react'
 import { ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter'
-import { lightTheme, darkTheme } from '@/theme'
-
-type ColorMode = 'light' | 'dark'
+import theme from '@/theme'
 
 export function MuiThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<ColorMode>('dark')
-
-  useEffect(() => {
-    // Читаємо збережений вибір або system preference
-    const stored = localStorage.getItem('color-mode') as ColorMode | null
-    if (stored) {
-      setMode(stored)
-    } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-      setMode('light')
-    }
-  }, [])
-
-  const theme = useMemo(
-    () => (mode === 'dark' ? darkTheme : lightTheme),
-    [mode]
-  )
-
   return (
-    // AppRouterCacheProvider: збирає CSS на сервері, вставляє в <head>
     <AppRouterCacheProvider>
       <ThemeProvider theme={theme}>
         <CssBaseline />
@@ -483,16 +481,9 @@ export function MuiThemeProvider({ children }: { children: React.ReactNode }) {
 // src/components/providers/AppProviders.tsx
 'use client'
 import { MuiThemeProvider } from './MuiThemeProvider'
-import { LenisProvider }    from './LenisProvider'
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
-  return (
-    <MuiThemeProvider>
-      <LenisProvider>
-        {children}
-      </LenisProvider>
-    </MuiThemeProvider>
-  )
+  return <MuiThemeProvider>{children}</MuiThemeProvider>
 }
 ```
 
@@ -500,7 +491,8 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
 
 ```tsx
 // src/app/[lang]/layout.tsx
-import { inter } from '@/theme'
+import InitColorSchemeScript from '@mui/material/InitColorSchemeScript'
+import { manrope } from '@/theme'
 import { AppProviders } from '@/components/providers/AppProviders'
 import { hasLocale } from './dictionaries'
 import { notFound } from 'next/navigation'
@@ -517,8 +509,11 @@ export default async function RootLayout({
   if (!hasLocale(lang)) notFound()
 
   return (
-    // inter.variable — передає CSS custom property --font-inter
-    <html lang={lang} className={inter.variable} suppressHydrationWarning>
+    <html lang={lang} className={manrope.variable} suppressHydrationWarning>
+      <head>
+        {/* Inline script — встановлює data-mui-color-scheme до першого paint */}
+        <InitColorSchemeScript attribute="data-mui-color-scheme" defaultMode="dark" />
+      </head>
       <body>
         <AppProviders>
           {children}
@@ -545,21 +540,23 @@ export default Link
 ### ThemeToggle
 
 ```tsx
-// src/components/layout/ThemeToggle.tsx
+// src/components/ui/ThemeToggle.tsx
 'use client'
+import { useColorScheme } from '@mui/material/styles'
 import IconButton from '@mui/material/IconButton'
-import { useTheme } from '@mui/material/styles'
 
-// Простий toggle через localStorage + re-render провайдера
-// Для глобального стейту — Context або zustand
+// useColorScheme — MUI hook, синхронізує localStorage + data-mui-color-scheme атрибут
 export function ThemeToggle() {
-  function toggle() {
-    const current = localStorage.getItem('color-mode') ?? 'dark'
-    const next = current === 'dark' ? 'light' : 'dark'
-    localStorage.setItem('color-mode', next)
-    window.location.reload() // або через Context setMode
-  }
-  return <IconButton onClick={toggle}>🌓</IconButton>
+  const { mode, setMode } = useColorScheme()
+  return (
+    <IconButton
+      onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')}
+      size="small"
+      color="inherit"
+    >
+      {mode === 'dark' ? '☀️' : '🌙'}
+    </IconButton>
+  )
 }
 ```
 
@@ -571,7 +568,7 @@ export function ThemeToggle() {
 
 ### Три шари захисту
 
-**1. Middleware** — optimistic check (Edge Runtime, без DB):
+**1. Proxy** — optimistic check (Node.js Runtime, без DB):
 ```ts
 // Декриптує JWT cookie → redirect якщо немає сесії
 // НЕ звертається до БД
@@ -810,6 +807,7 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="..."
 RESEND_API_KEY="..."
 RESEND_FROM_EMAIL="noreply@yourdomain.com"
 ADMIN_EMAIL="admin@yourdomain.com"
+ADMIN_PASSWORD="пароль_для_першого_адміна" # тільки для prisma db seed
 TELEGRAM_BOT_TOKEN="..."
 TELEGRAM_CHAT_ID="..."
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="..."
@@ -826,6 +824,7 @@ CLOUDINARY_API_SECRET="..."
 - Feature-based компоненти: `features/booking/`, `features/services/` тощо
 - Стилі: тільки MUI `sx` prop або `styled()`, кольори тільки через `theme.palette`
 - `getDictionary` — тільки в RSC, Client Components отримують `dict` через props
+- Не створювати файли-реекспорти/aliases (наприклад, `export { X as Y } from './X'`) — імпортувати напряму з оригінального файлу
 - Git: `feat:` / `fix:` / `style:` / `refactor:` / `chore:`
 
 ---

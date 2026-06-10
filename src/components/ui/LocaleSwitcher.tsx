@@ -1,54 +1,67 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { Select, MenuItem, FormControl, InputAdornment, SelectChangeEvent } from "@mui/material";
-import LanguageIcon from "@mui/icons-material/Language";
+import { ToggleButton, ToggleButtonGroup } from "@mui/material";
 
 const locales = [
-  { code: "en", label: "English" },
-  { code: "uk", label: "Українська" },
+  { code: "uk", label: "UA" },
+  { code: "en", label: "EN" },
 ];
 
 export default function LocaleSwitcher() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const currentLocale = pathname?.split("/")[1] || "en";
+  const currentLocale = pathname?.split("/")[1] || "uk";
 
-  const handleLocaleChange = (event: SelectChangeEvent) => {
-    const newLocale = event.target.value;
-    if (!pathname) return;
+  const handleLocaleChange = (
+    _event: React.MouseEvent<HTMLElement>,
+    newLocale: string | null
+  ) => {
+    if (!newLocale || !pathname || newLocale === currentLocale) return;
 
     const segments = pathname.split("/");
     segments[1] = newLocale;
-    const newPathname = segments.join("/");
-
-    router.push(newPathname);
+    router.push(segments.join("/"));
   };
 
   return (
-    <FormControl variant="standard" size="small" sx={{ minWidth: 140 }}>
-      <Select
-        value={currentLocale}
-        onChange={handleLocaleChange}
-        startAdornment={
-          <InputAdornment position="start" sx={{ mr: 0.5 }}>
-            <LanguageIcon sx={{ fontSize: "small", color: "action.active" }} />
-          </InputAdornment>
-        }
-        sx={{
-          borderRadius: 2,
-          "& .MuiSelect-select": {
-            py: 1,
+    <ToggleButtonGroup
+      value={currentLocale}
+      exclusive
+      onChange={handleLocaleChange}
+      size="small"
+      sx={{
+        border: "1px solid",
+        borderColor: "divider",
+        borderRadius: 2,
+        p: 0.25,
+        gap: 0.25,
+        "& .MuiToggleButtonGroup-grouped": {
+          border: 0,
+          borderRadius: 1.5,
+          minWidth: 36,
+          px: 1,
+          py: 0.25,
+          fontSize: "0.75rem",
+          fontWeight: 600,
+          letterSpacing: "0.02em",
+          color: "text.secondary",
+          "&.Mui-selected": {
+            color: "primary.contrastText",
+            bgcolor: "primary.main",
+            "&:hover": {
+              bgcolor: "primary.main",
+            },
           },
-        }}
-      >
-        {locales.map((locale) => (
-          <MenuItem key={locale.code} value={locale.code}>
-            {locale.label}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+        },
+      }}
+    >
+      {locales.map((locale) => (
+        <ToggleButton key={locale.code} value={locale.code} aria-label={locale.label}>
+          {locale.label}
+        </ToggleButton>
+      ))}
+    </ToggleButtonGroup>
   );
 }

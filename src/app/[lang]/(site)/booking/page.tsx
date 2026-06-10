@@ -1,13 +1,12 @@
-'use client'
+import { notFound } from "next/navigation";
+import { getDictionary, hasLocale } from "@/dictionaries";
+import { BookingForm } from "@/components/features/booking/BookingForm";
 
-import { Box, Container, Typography } from '@mui/material'
+export default async function BookingPage({ params }: PageProps<"/[lang]/booking">) {
+  const { lang } = await params;
+  if (!hasLocale(lang)) notFound();
 
-export default function BookingPage() {
-  return (
-    <Box sx={{ py: 8 }}>
-      <Container maxWidth="lg">
-        <Typography variant="h2">Booking Page (Coming Soon)</Typography>
-      </Container>
-    </Box>
-  )
+  const { booking, errors } = await getDictionary(lang);
+
+  return <BookingForm dict={booking} errorsDict={errors} />;
 }

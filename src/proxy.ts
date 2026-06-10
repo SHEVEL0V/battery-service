@@ -1,29 +1,50 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { match } from "@formatjs/intl-localematcher";
 import Negotiator from "negotiator";
-import { locales, defaultLocale } from "@/dictionaries";
+import { decrypt } from "@/lib/auth/session";
+
+const locales = ["uk", "en"];
+const defaultLocale = "uk";
 
 function getLocale(request: NextRequest): string {
-  const negotiatorHeaders: Record<string, string> = {};
-  request.headers.forEach((value, key) => (negotiatorHeaders[key] = value));
-
-  // @ts-ignore locales are read-only
-  const languages = new Negotiator({ headers: negotiatorHeaders }).languages();
-
-  return match(languages, locales as unknown as string[], defaultLocale);
+  const acceptLanguage = request.headers.get("accept-language") ?? "";
+  const headers = { "accept-language": acceptLanguage };
+  const languages = new Negotiator({ headers }).languages();
+  try {
+    return match(languages, locales, defaultLocale);
+  } catch {
+    return defaultLocale;
+  }
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
   const pathnameHasLocale = locales.some(
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
   );
 
-  if (pathnameHasLocale) return;
+  if (!pathnameHasLocale) {
+    const locale = getLocale(request);
+    request.nextUrl.pathname = `/${locale}${pathname}`;
+    return NextResponse.redirect(request.nextUrl);
+  }
 
-  const locale = getLocale(request);
-  request.nextUrl.pathname = `/${locale}${pathname}`;
-  return NextResponse.redirect(request.nextUrl);
+  const isAdminRoute = pathname.includes("/admin");
+  const isAuthRoute = pathname.includes("/login");
+
+  if (isAdminRoute || isAuthRoute) {
+    const cookie = request.cookies.get("session")?.value;
+    const session = await decrypt(cookie);
+
+    if (isAdminRoute && !session?.userId) {
+      return NextResponse.redirect(new URL("/uk/login", request.url));
+    }
+    if (isAuthRoute && session?.userId) {
+      return NextResponse.redirect(new URL("/uk/admin", request.url));
+    }
+  }
 }
 
 export const config = {

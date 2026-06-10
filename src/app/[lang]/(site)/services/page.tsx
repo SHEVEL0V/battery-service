@@ -1,13 +1,38 @@
-'use client'
+import { Box, Container, Grid, Stack, Typography } from "@mui/material";
+import { notFound } from "next/navigation";
+import { getDictionary, hasLocale } from "@/dictionaries";
+import { getActiveServices } from "@/components/features/services/queries";
+import { ServiceListCard } from "@/components/features/services/ServiceListCard";
 
-import { Box, Container, Typography } from '@mui/material'
+export default async function ServicesPage({ params }: PageProps<"/[lang]/services">) {
+  const { lang } = await params;
+  if (!hasLocale(lang)) notFound();
 
-export default function ServicesPage() {
+  const [{ servicesPage }, services] = await Promise.all([
+    getDictionary(lang),
+    getActiveServices(),
+  ]);
+
   return (
-    <Box sx={{ py: 8 }}>
+    <Box component="section" sx={{ py: { xs: 8, md: 12 } }}>
       <Container maxWidth="lg">
-        <Typography variant="h2">Services Page (Coming Soon)</Typography>
+        <Stack sx={{ gap: 6 }}>
+          <Stack sx={{ alignItems: "center", textAlign: "center" }}>
+            <Typography variant="h2">{servicesPage.title}</Typography>
+            <Typography variant="body1" color="text.secondary">
+              {servicesPage.description}
+            </Typography>
+          </Stack>
+
+          <Grid container spacing={3}>
+            {services.map((service) => (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={service.id}>
+                <ServiceListCard service={service} lang={lang} dict={servicesPage} />
+              </Grid>
+            ))}
+          </Grid>
+        </Stack>
       </Container>
     </Box>
-  )
+  );
 }

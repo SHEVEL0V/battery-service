@@ -1,9 +1,12 @@
 "use client";
+
+import { Box, Button, Container, Stack } from "@mui/material";
+import { motion } from "framer-motion";
 import type { Dictionary } from "@/dictionaries";
-
-import { Box, Button, Container, Stack, Typography } from "@mui/material";
-
-import { ScrollReveal } from "@/components/animation/ScrollReveal";
+import NextLink from "@/components/ui/NextLink";
+import { HeroText } from "./HeroText";
+import { HeroParticles } from "./HeroParticles";
+import { HeroScene } from "./HeroScene";
 
 export function Hero({ dict }: { dict: Dictionary["hero"] }) {
   return (
@@ -11,43 +14,42 @@ export function Hero({ dict }: { dict: Dictionary["hero"] }) {
       component="section"
       sx={{
         py: { xs: 8, md: 12 },
+        position: "relative",
+        overflow: "hidden",
         color: "text.primary",
       }}
     >
-      <Container maxWidth="lg">
-        <Stack spacing={4} sx={{ alignItems: "center", textAlign: "center" }}>
-          <ScrollReveal direction="up">
-            <Typography variant="h1" sx={{ fontSize: { xs: "2rem", md: "3.5rem" } }}>
-              {dict.title}
-            </Typography>
-          </ScrollReveal>
+      <HeroParticles />
 
-          <ScrollReveal direction="up" delay={0.1}>
-            <Typography variant="h3" color="text.secondary">
-              {dict.subtitle}
-            </Typography>
-          </ScrollReveal>
+      <Container maxWidth="lg" sx={{ position: "relative" }}>
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          spacing={6}
+          sx={{ alignItems: "center" }}
+        >
+          <Stack spacing={3} sx={{ flex: 1, alignItems: { xs: "center", md: "flex-start" }, textAlign: { xs: "center", md: "left" } }}>
+            <HeroText dict={dict} />
 
-          <ScrollReveal direction="up" delay={0.2}>
-            <Typography variant="body1" sx={{ maxWidth: "600px" }}>
-              {dict.description}
-            </Typography>
-          </ScrollReveal>
-
-          <ScrollReveal direction="up" delay={0.3}>
-            <Button
-              variant="contained"
-              size="large"
-              sx={{
-                mt: 2,
-                px: 4,
-                py: 1.5,
-                fontSize: "1rem",
-              }}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.5, ease: "easeOut" }}
             >
-              {dict.cta}
-            </Button>
-          </ScrollReveal>
+              <Button
+                component={NextLink}
+                href="/booking"
+                variant="contained"
+                size="large"
+                sx={{ mt: 1, px: 4, py: 1.5, fontSize: "1rem" }}
+              >
+                {dict.cta}
+              </Button>
+            </motion.div>
+          </Stack>
+
+          <Box sx={{ flex: 1, display: { xs: "none", md: "flex" }, justifyContent: "center" }}>
+            <HeroScene />
+          </Box>
         </Stack>
       </Container>
     </Box>

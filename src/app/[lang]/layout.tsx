@@ -1,35 +1,35 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getDictionary, hasLocale } from "@/dictionaries";
-import { MuiProvider } from "@/components/providers/MuiProvider";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
+import { hasLocale } from "@/dictionaries";
+import { AppProviders } from "@/components/providers/AppProviders";
+import { manrope } from "@/theme";
 
 export async function generateStaticParams() {
-  return [{ lang: "en" }, { lang: "uk" }];
+  return [{ lang: "uk" }, { lang: "en" }];
 }
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Tesla Battery Service - Professional Repair",
     description: "Professional Tesla battery repair service",
-    viewport: "width=device-width, initial-scale=1",
   };
 }
 
 export default async function RootLayout({ children, params }: LayoutProps<"/[lang]">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
-  const { nav, footer } = await getDictionary(lang);
 
   return (
-    <html lang={lang} suppressHydrationWarning data-theme="light">
+    <html lang={lang} className={manrope.variable} suppressHydrationWarning>
+      <head>
+        <InitColorSchemeScript
+          attribute="data-mui-color-scheme"
+          defaultMode="dark"
+        />
+      </head>
       <body>
-        <MuiProvider>
-          <Header dict={nav} />
-          {children}
-          <Footer dict={footer} />
-        </MuiProvider>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );
