@@ -1,7 +1,7 @@
 import { Box, Container, Grid, Stack, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
 import { getDictionary, hasLocale } from "@/i18n/config";
-import { MapClient } from "@/features/map/MapClient";
+import { ContactInfoCards, MapClient } from "@/features/map/MapClient";
 import { ContactForm } from "@/features/contact/ContactForm";
 
 export default async function ContactsPage({ params }: PageProps<"/[lang]/contacts">) {
@@ -21,14 +21,16 @@ export default async function ContactsPage({ params }: PageProps<"/[lang]/contac
             </Typography>
           </Stack>
 
-          <Grid container spacing={4}>
+          <Grid container spacing={4} sx={{ alignItems: "stretch" }}>
             <Grid size={{ xs: 12, md: 6 }}>
               <ContactForm dict={contacts.form} />
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ display: "flex" }}>
               <MapClient dict={map} />
             </Grid>
           </Grid>
+
+          <ContactInfoCards dict={map} />
         </Stack>
       </Container>
     </Box>

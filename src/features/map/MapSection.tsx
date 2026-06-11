@@ -1,6 +1,6 @@
-import { Box, Container, Typography } from "@mui/material";
+import { Box, Container, Stack, Typography } from "@mui/material";
 import type { Dictionary } from "@/i18n/config";
-import { MapClient } from "./MapClient";
+import { ContactInfoCards, MapClient } from "./MapClient";
 
 export function MapSection({ dict }: { dict: Dictionary["map"] }) {
   return (
@@ -9,7 +9,12 @@ export function MapSection({ dict }: { dict: Dictionary["map"] }) {
         <Typography variant="h2" sx={{ mb: 6, textAlign: "center" }}>
           {dict.title}
         </Typography>
-        <MapClient dict={dict} />
+        <Stack spacing={4}>
+          <Box sx={{ height: 400 }}>
+            <MapClient dict={dict} />
+          </Box>
+          <ContactInfoCards dict={dict} />
+        </Stack>
       </Container>
     </Box>
   );
