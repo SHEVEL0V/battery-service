@@ -1,11 +1,11 @@
-import { Hero } from "@/features/hero/Hero";
+import { Hero } from "@/features/hero/components/Hero";
 import { Stats } from "@/features/stats/Stats";
 import { ServicesList } from "@/features/services/components/ServicesList";
 import { HowItWorks } from "@/features/how-it-works/HowItWorks";
 import { WhyUs } from "@/features/why-us/WhyUs";
-import { ReviewsCarousel } from "@/features/reviews/ReviewsCarousel";
+import { ReviewsCarousel } from "@/features/reviews/components/ReviewsCarousel";
 import { BookingCTA } from "@/features/booking/components/BookingCTA";
-import { MapSection } from "@/features/map/MapSection";
+import { MapSection } from "@/features/map/components/MapSection";
 import { notFound } from "next/navigation";
 import { getDictionary, hasLocale } from "@/i18n/config";
 

@@ -3,7 +3,7 @@ import { ScrollReveal } from "@/components/animation/ScrollReveal";
 import type { Dictionary, Locale } from "@/i18n/config";
 import { SectionBackgroundImage } from "@/components/ui/SectionBackgroundImage";
 import { adaptiveOverlaySx, adaptiveOverlayVarsSx } from "@/lib/styles/sectionBackground";
-import { getVisibleReviews } from "./queries";
+import { getVisibleReviews } from "../queries";
 import { AddReviewDialog } from "./AddReviewDialog";
 
 export async function ReviewsCarousel({ dict, lang }: { dict: Dictionary["reviews"]; lang: Locale }) {

@@ -31,20 +31,20 @@ export async function login(prevState: LoginState, formData: FormData): Promise<
     user = await prisma.user.findUnique({
       where: { email: validated.data.email },
     });
+
+    if (!user) {
+      return { message: dict.auth.invalidCredentials };
+    }
+
+    const passwordMatch = await bcrypt.compare(validated.data.password, user.password);
+    if (!passwordMatch) {
+      return { message: dict.auth.invalidCredentials };
+    }
+
+    await createSession(user.id, user.role);
   } catch {
     return { message: dict.errors.serverError };
   }
-
-  if (!user) {
-    return { message: dict.auth.invalidCredentials };
-  }
-
-  const passwordMatch = await bcrypt.compare(validated.data.password, user.password);
-  if (!passwordMatch) {
-    return { message: dict.auth.invalidCredentials };
-  }
-
-  await createSession(user.id, user.role);
 
   redirect(`/${locale}/admin`);
 }

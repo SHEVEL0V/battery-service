@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import type { Dictionary } from "@/i18n/config";
-import { submitReview, type ReviewState } from "./actions";
+import { submitReview, type ReviewState } from "../actions";
 import { BookingSuccess } from "@/features/booking/components/BookingSuccess";
 
 const initialState: ReviewState = {};
