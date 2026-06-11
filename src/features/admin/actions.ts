@@ -43,6 +43,24 @@ export interface UpdateServiceState {
   errors?: Partial<Record<keyof ServiceInput, string[]>>;
 }
 
+export async function createService(input: ServiceInput): Promise<UpdateServiceState> {
+  await verifySession();
+
+  const validated = serviceSchema.safeParse(input);
+  if (!validated.success) {
+    return { errors: validated.error.flatten().fieldErrors };
+  }
+
+  try {
+    await prisma.service.create({ data: validated.data });
+  } catch {
+    return { error: "Failed to create service. Slug may already be in use." };
+  }
+
+  revalidateTag(CACHE_TAGS.services, "default");
+  return { success: true };
+}
+
 export async function updateService(id: string, input: ServiceInput): Promise<UpdateServiceState> {
   await verifySession();
 

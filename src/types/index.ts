@@ -12,4 +12,4 @@ export type {
   Role,
   Service,
   User,
-} from "@g/prisma/client";
+} from "@g/prisma";

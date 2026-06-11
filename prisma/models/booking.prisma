@@ -1,5 +1,5 @@
 model Booking {
-  id        String        @id @default(cuid())
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
   name      String
   phone     String
   email     String

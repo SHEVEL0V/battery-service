@@ -7,11 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit --incremental false",
-    "prisma:studio": "prisma studio",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:generate": "prisma generate",
-    "prisma:seed": "prisma db seed"
+    "vercel-build": "prisma generate && next build"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -20,8 +16,7 @@
     "@mui/icons-material": "^9.1.0",
     "@mui/material": "^9.1.0",
     "@mui/material-nextjs": "^9.1.0",
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
+    "@prisma/client": "^6.19.3",
     "@types/bcryptjs": "^2.4.6",
     "@types/negotiator": "^0.6.4",
     "@vis.gl/react-google-maps": "^1.8.3",
@@ -31,7 +26,6 @@
     "jose": "^6.2.3",
     "negotiator": "^1.0.0",
     "next": "^16.2.7",
-    "pg": "^8.21.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "resend": "^6.12.4",
@@ -39,10 +33,10 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/pg": "^8.20.0",
+    "@types/node": "25.9.3",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.7",
-    "prisma": "^7.8.0",
+    "prisma": "^6.19.3",
     "tsx": "^4.22.4",
     "typescript": "6.0.3"
   }

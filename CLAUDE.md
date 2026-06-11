@@ -4,7 +4,7 @@
 
 Сайт для сервісу ремонту батарей Tesla. Надає інформацію про послуги, пояснення процесу ремонту, онлайн-запис на сервіс, контакти з картою та маршрутом.
 
-**Стек**: Next.js 16.2.7 (App Router) · TypeScript · MUI v9.1 · Prisma (adapter-pg) · PostgreSQL · Framer Motion · Jose · bcryptjs · Resend · Telegram Bot API (fetch)
+**Стек**: Next.js 16.2.7 (App Router) · TypeScript · MUI v9.1 · Prisma · MongoDB · Framer Motion · Jose · bcryptjs · Resend · Telegram Bot API (fetch)
 
 ---
 
@@ -104,7 +104,7 @@ src/
 │   │   ├── cookies.ts               ← server-only, createSession/deleteSession
 │   │   └── dal.ts                   ← server-only, verifySession (React.cache)
 │   ├── db/
-│   │   └── prisma.ts                ← singleton PrismaClient (PrismaPg adapter)
+│   │   └── prisma.ts                ← singleton PrismaClient (MongoDB)
 │   ├── cache/
 │   │   └── cache-tags.ts
 │   └── integrations/
@@ -133,7 +133,7 @@ prisma/
 ├── migrations/
 └── seed.ts
 
-generated/prisma/                    ← Prisma Client output (alias @g/prisma/client)
+generated/prisma/                    ← Prisma Client output (alias @g/prisma)
 ```
 
 ---
@@ -890,16 +890,18 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="..."
 
 ## База даних — Prisma
 
-Схема розбита на файли (`prisma/schema.prisma` — лише `generator`/`datasource`, моделі — у `prisma/models/*.prisma`). Клієнт генерується у `generated/prisma` і доступний через alias `@g/prisma/client`. Підключення — через `@prisma/adapter-pg` (`PrismaPg`).
+Схема розбита на файли (`prisma/schema.prisma` — лише `generator`/`datasource`, моделі — у `prisma/models/*.prisma`). Клієнт генерується у `generated/prisma` і доступний через alias `@g/prisma`. Підключення — звичайний `PrismaClient` (без адаптера), MongoDB connector.
+
+> **MongoDB вимагає replica set** (навіть однонодовий) для транзакцій та nested writes — `mongo` сервіс у docker-compose запускається з `--replSet rs0` і `rs.initiate()` через healthcheck.
+>
+> **Версія Prisma**: підтримка MongoDB у Prisma ORM v7 ще не реалізована — використовується **Prisma 6.19** (`prisma`, `@prisma/client`). Генератор — `prisma-client-js` (стандартний, без driver adapter).
 
 ```ts
 // src/lib/db/prisma.ts
 import 'server-only'
-import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '@g/prisma/client'
+import { PrismaClient } from '@g/prisma'
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
-const prismaClientSingleton = () => new PrismaClient({ adapter })
+const prismaClientSingleton = () => new PrismaClient()
 
 const globalForPrisma = globalThis as unknown as {
   prisma: ReturnType<typeof prismaClientSingleton> | undefined
@@ -921,7 +923,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
 }
 ```
 
@@ -929,7 +931,7 @@ datasource db {
 
 ```prisma
 model Booking {
-  id        String        @id @default(cuid())
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
   name      String
   phone     String
   email     String
@@ -948,7 +950,7 @@ enum BookingStatus { PENDING CONFIRMED IN_PROGRESS COMPLETED CANCELLED }
 
 ```prisma
 model Service {
-  id       String  @id @default(cuid())
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
   slug     String  @unique
   titleUk  String
   titleEn  String
@@ -961,7 +963,7 @@ model Service {
 }
 
 model Contact {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String
   phone     String
   email     String?
@@ -970,7 +972,7 @@ model Contact {
 }
 
 model Review {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   author    String
   rating    Int
   textUk    String
@@ -985,7 +987,7 @@ model Review {
 
 ```prisma
 model User {
-  id       String @id @default(cuid())
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
   email    String @unique
   password String // bcrypt hash, cost factor 12
   role     Role   @default(ADMIN)
@@ -1039,8 +1041,8 @@ export default nextConfig
 ## Змінні середовища (.env.local)
 
 ```env
-DATABASE_URL="postgresql://..."
-DIRECT_URL="postgresql://..."
+DATABASE_URL="mongodb://localhost:27017/tesladb?replicaSet=rs0&directConnection=true"
+DIRECT_URL="mongodb://localhost:27017/tesladb?replicaSet=rs0&directConnection=true"
 SESSION_SECRET="згенерований_рядок_32_символи"
 ADMIN_EMAIL="admin@yourdomain.com"
 ADMIN_PASSWORD="пароль_для_першого_адміна" # тільки для prisma db seed
@@ -1119,25 +1121,25 @@ services:
     env_file: [.env.local]
     environment:
       - WATCHPACK_POLLING=true
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-tesla}:${POSTGRES_PASSWORD:-secret}@postgres:5432/${POSTGRES_DB:-tesladb}
-      - DIRECT_URL=postgresql://${POSTGRES_USER:-tesla}:${POSTGRES_PASSWORD:-secret}@postgres:5432/${POSTGRES_DB:-tesladb}
-    depends_on: { postgres: { condition: service_healthy } }
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-tesla}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
-      POSTGRES_DB: ${POSTGRES_DB:-tesladb}
-    volumes: [postgres_data:/var/lib/postgresql/data]
-    ports: ['5432:5432']
+      - DATABASE_URL=mongodb://mongo:27017/${MONGO_DB:-tesladb}?replicaSet=rs0&directConnection=true
+      - DIRECT_URL=mongodb://mongo:27017/${MONGO_DB:-tesladb}?replicaSet=rs0&directConnection=true
+    depends_on: { mongo: { condition: service_healthy } }
+  mongo:
+    image: mongo:7
+    command: ['--replSet', 'rs0', '--bind_ip_all']
+    volumes: [mongo_data:/data/db]
+    ports: ['27017:27017']
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-tesla}']
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"try { rs.status().ok } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}).ok }\""]
       interval: 5s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 5s
 volumes:
-  postgres_data:
+  mongo_data:
 ```
+
+> Mongo connector не використовує SQL-міграції — схема застосовується через `prisma db push`.
 
 ### Команди
 
@@ -1145,14 +1147,14 @@ volumes:
 # Dev
 npm run dev
 npx prisma studio
-npx prisma migrate dev --name <name>
+npx prisma db push
 
 # Docker dev
 docker compose up --build
 
 # Docker prod
 docker compose -f docker-compose.prod.yml up --build -d
-docker compose -f docker-compose.prod.yml exec app npx prisma migrate deploy
+docker compose -f docker-compose.prod.yml exec app npx prisma db push
 
 # SSL
 certbot certonly --standalone -d yourdomain.com
@@ -1175,8 +1177,8 @@ npm install jose bcryptjs
 npm install -D @types/bcryptjs
 
 # Prisma
-npm install @prisma/client @prisma/adapter-pg pg
-npm install -D @types/pg prisma
+npm install @prisma/client
+npm install -D prisma
 
 # Інтеграції
 npm install resend

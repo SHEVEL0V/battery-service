@@ -1,13 +1,11 @@
 import { config } from "dotenv";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../generated/prisma/client";
+import { PrismaClient } from "../generated/prisma";
 import bcrypt from "bcryptjs";
 
 config({ path: ".env" });
 config({ path: ".env.local", override: true });
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function main() {
   const email = process.env.ADMIN_EMAIL;

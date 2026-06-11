@@ -1,10 +1,12 @@
 "use client";
 
 import { useOptimistic, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   Button,
   Chip,
   Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -14,77 +16,99 @@ import {
   Typography,
 } from "@mui/material";
 import type { Service } from "@/types";
-import { updateService, type UpdateServiceState } from "../actions";
-import { ServiceEditDialog } from "./ServiceEditDialog";
+import { createService, updateService, type UpdateServiceState } from "../actions";
+import { ServiceFormDialog, type ServiceFormTarget } from "./ServiceFormDialog";
 import type { ServiceInput } from "../schema";
 
+type OptimisticAction =
+  | { type: "create"; service: Service }
+  | { type: "update"; service: Service };
+
 export function ServicesTable({ services }: { services: Service[] }) {
-  const [editing, setEditing] = useState<Service | null>(null);
+  const router = useRouter();
+  const [target, setTarget] = useState<ServiceFormTarget>(null);
   const [, startTransition] = useTransition();
-  const [optimisticServices, setOptimisticService] = useOptimistic(
+  const [optimisticServices, applyOptimistic] = useOptimistic(
     services,
-    (state, updated: Service) => state.map((s) => (s.id === updated.id ? updated : s)),
+    (state, action: OptimisticAction) => {
+      if (action.type === "update") {
+        return state.map((s) => (s.id === action.service.id ? action.service : s));
+      }
+      return [...state, action.service];
+    },
   );
 
-  const handleSave = (id: string, input: ServiceInput): Promise<UpdateServiceState> => {
-    const original = services.find((s) => s.id === id);
-
+  const handleSave = (saveTarget: Service | "new", input: ServiceInput): Promise<UpdateServiceState> => {
     return new Promise((resolve) => {
       startTransition(async () => {
-        if (original) setOptimisticService({ ...original, ...input });
-        resolve(await updateService(id, input));
+        if (saveTarget === "new") {
+          applyOptimistic({ type: "create", service: { id: `optimistic-${Date.now()}`, ...input } });
+          const result = await createService(input);
+          if (result.success) router.refresh();
+          resolve(result);
+          return;
+        }
+
+        applyOptimistic({ type: "update", service: { ...saveTarget, ...input } });
+        resolve(await updateService(saveTarget.id, input));
       });
     });
   };
 
-  if (optimisticServices.length === 0) {
-    return <Typography color="text.secondary">No services yet.</Typography>;
-  }
-
   return (
     <>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Order</TableCell>
-              <TableCell>Title (UK)</TableCell>
-              <TableCell>Title (EN)</TableCell>
-              <TableCell>Slug</TableCell>
-              <TableCell>Price</TableCell>
-              <TableCell>Duration</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {optimisticServices.map((service) => (
-              <TableRow key={service.id}>
-                <TableCell>{service.order}</TableCell>
-                <TableCell>{service.titleUk}</TableCell>
-                <TableCell>{service.titleEn}</TableCell>
-                <TableCell>{service.slug}</TableCell>
-                <TableCell>{service.price} ₴</TableCell>
-                <TableCell>{service.duration}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={service.isActive ? "Active" : "Inactive"}
-                    color={service.isActive ? "success" : "default"}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Button size="small" onClick={() => setEditing(service)}>
-                    Edit
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Stack direction="row" sx={{ justifyContent: "flex-end", mb: 2 }}>
+        <Button variant="contained" onClick={() => setTarget("new")}>
+          Add service
+        </Button>
+      </Stack>
 
-      <ServiceEditDialog service={editing} onClose={() => setEditing(null)} onSave={handleSave} />
+      {optimisticServices.length === 0 ? (
+        <Typography color="text.secondary">No services yet.</Typography>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Order</TableCell>
+                <TableCell>Title (UK)</TableCell>
+                <TableCell>Title (EN)</TableCell>
+                <TableCell>Slug</TableCell>
+                <TableCell>Price</TableCell>
+                <TableCell>Duration</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {optimisticServices.map((service) => (
+                <TableRow key={service.id}>
+                  <TableCell>{service.order}</TableCell>
+                  <TableCell>{service.titleUk}</TableCell>
+                  <TableCell>{service.titleEn}</TableCell>
+                  <TableCell>{service.slug}</TableCell>
+                  <TableCell>{service.price} ₴</TableCell>
+                  <TableCell>{service.duration}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={service.isActive ? "Active" : "Inactive"}
+                      color={service.isActive ? "success" : "default"}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Button size="small" onClick={() => setTarget(service)}>
+                      Edit
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
+      <ServiceFormDialog target={target} onClose={() => setTarget(null)} onSave={handleSave} />
     </>
   );
 }

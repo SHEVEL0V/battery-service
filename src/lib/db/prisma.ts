@@ -1,11 +1,7 @@
 import "server-only";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@g/prisma/client";
+import { PrismaClient } from "@g/prisma";
 
-const connectionString = `${process.env.DATABASE_URL}`;
-const adapter = new PrismaPg({ connectionString });
-
-const prismaClientSingleton = () => new PrismaClient({ adapter });
+const prismaClientSingleton = () => new PrismaClient();
 
 type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
 

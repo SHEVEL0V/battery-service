@@ -1,5 +1,5 @@
 model User {
-  id       String @id @default(cuid())
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
   email    String @unique
   password String // bcrypt hash, cost factor 12
   role     Role   @default(ADMIN)

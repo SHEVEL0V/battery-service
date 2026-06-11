@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useState } from "react";
 import { Box, Container, Paper, Step, StepLabel, Stepper } from "@mui/material";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { Dictionary } from "@/i18n/config";
@@ -30,12 +30,12 @@ interface Props {
 export function BookingForm({ dict, errorsDict }: Props) {
   const [step, setStep] = useState<BookingStep>(1);
   const [draft, setDraft] = useState<BookingDraft>({});
+  const [direction, setDirection] = useState(1);
   const [state, action, isPending] = useActionState(createBooking, initialState);
   const prefersReducedMotion = useReducedMotion();
-  const direction = useRef(1);
 
   const goTo = (next: BookingStep) => {
-    direction.current = next > step ? 1 : -1;
+    setDirection(next > step ? 1 : -1);
     setStep(next);
   };
 
@@ -58,10 +58,10 @@ export function BookingForm({ dict, errorsDict }: Props) {
               </Stepper>
             )}
 
-            <AnimatePresence mode="wait" custom={direction.current} initial={false}>
+            <AnimatePresence mode="wait" custom={direction} initial={false}>
               <motion.div
                 key={state.success ? "success" : step}
-                custom={direction.current}
+                custom={direction}
                 variants={prefersReducedMotion ? undefined : stepVariants}
                 initial="enter"
                 animate="center"

@@ -1,5 +1,5 @@
 model Service {
-  id       String  @id @default(cuid())
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
   slug     String  @unique
   titleUk  String
   titleEn  String
@@ -12,7 +12,7 @@ model Service {
 }
 
 model Contact {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String
   phone     String
   email     String?
@@ -21,7 +21,7 @@ model Contact {
 }
 
 model Review {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   author    String
   rating    Int
   textUk    String

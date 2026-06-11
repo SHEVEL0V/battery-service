@@ -2,8 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Box, Container, Stack, Typography } from "@mui/material";
-import { Button } from "@/components/ui/Button";
+import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import NextLink from "@/components/ui/NextLink";
 
 const messages = {
