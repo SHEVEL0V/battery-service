@@ -2,6 +2,7 @@
 
 import { Box, Button, Container, Stack } from "@mui/material";
 import type { Dictionary, Locale } from "@/i18n/config";
+import routes from "@/lib/routing/routes";
 import NextLink from "@/components/ui/NextLink";
 import { SectionBackgroundImage } from "@/components/ui/SectionBackgroundImage";
 import { adaptiveOverlaySx, adaptiveOverlayVarsSx } from "@/lib/styles/sectionBackground";
@@ -38,7 +39,7 @@ export function Hero({ dict, lang }: { dict: Dictionary["hero"]; lang: Locale })
             <FadeIn delay={0.6}>
               <Button
                 component={NextLink}
-                href={`/${lang}/booking`}
+                href={routes(lang).booking}
                 variant="contained"
                 size="large"
                 sx={{ mt: 1, px: 4, py: 1.5, fontSize: "1rem" }}

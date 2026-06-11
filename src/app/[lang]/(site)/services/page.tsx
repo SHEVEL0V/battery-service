@@ -4,8 +4,6 @@ import { getDictionary, hasLocale } from "@/i18n/config";
 import { getActiveServices } from "@/features/services/queries";
 import { ServiceListCard } from "@/features/services/components/ServiceListCard";
 
-export const dynamic = "force-dynamic";
-
 export default async function ServicesPage({ params }: PageProps<"/[lang]/services">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();

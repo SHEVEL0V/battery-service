@@ -2,6 +2,7 @@ import { Box, Container, Grid, Paper, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
 import prisma from "@/lib/db/prisma";
 import NextLink from "@/components/ui/NextLink";
+import routes from "@/lib/routing/routes";
 import { getDictionary, hasLocale } from "@/i18n/config";
 
 export const dynamic = "force-dynamic";
@@ -21,12 +22,13 @@ export default async function AdminPage({ params }: PageProps<"/[lang]/admin">) 
       prisma.contact.count(),
     ]);
 
+  const r = routes(lang);
   const stats = [
-    { label: admin.dashboardStats.totalBookings, value: bookingsCount, href: `/${lang}/admin/bookings` },
-    { label: admin.dashboardStats.pendingBookings, value: pendingCount, href: `/${lang}/admin/bookings?status=PENDING` },
-    { label: admin.dashboardStats.activeServices, value: servicesCount, href: `/${lang}/admin/services` },
-    { label: admin.dashboardStats.pendingReviews, value: pendingReviewsCount, href: `/${lang}/admin/reviews` },
-    { label: admin.dashboardStats.contactMessages, value: contactsCount, href: `/${lang}/admin/contacts` },
+    { label: admin.dashboardStats.totalBookings, value: bookingsCount, href: r.adminBookings },
+    { label: admin.dashboardStats.pendingBookings, value: pendingCount, href: `${r.adminBookings}?status=PENDING` },
+    { label: admin.dashboardStats.activeServices, value: servicesCount, href: r.adminServices },
+    { label: admin.dashboardStats.pendingReviews, value: pendingReviewsCount, href: r.adminReviews },
+    { label: admin.dashboardStats.contactMessages, value: contactsCount, href: r.adminContacts },
   ];
 
   return (

@@ -23,7 +23,7 @@ export default async function ContactsPage({ params }: PageProps<"/[lang]/contac
 
           <Grid container spacing={4} sx={{ alignItems: "stretch" }}>
             <Grid size={{ xs: 12, md: 6 }}>
-              <ContactForm dict={contacts.form} />
+              <ContactForm dict={contacts.form} lang={lang} />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }} sx={{ display: "flex" }}>
               <MapClient dict={map} />

@@ -23,24 +23,7 @@
   },
   "services": {
     "title": "Our Services",
-    "description": "Comprehensive range of services for your electric vehicle",
-    "services": [
-      {
-        "title": "Battery Diagnostics",
-        "desc": "Full battery health check and component inspection",
-        "price": "50$"
-      },
-      {
-        "title": "Battery Replacement",
-        "desc": "Complete battery replacement with new unit",
-        "price": "300$"
-      },
-      {
-        "title": "Module Replacement",
-        "desc": "Replace damaged battery modules",
-        "price": "100$"
-      }
-    ]
+    "description": "Comprehensive range of services for your electric vehicle"
   },
   "howItWorks": {
     "title": "How It Works",
@@ -128,6 +111,7 @@
     "contacts": "Contacts",
     "logout": "Log Out",
     "viewSite": "View Site",
+    "serviceSaveError": "Failed to save the service. The slug may already be in use.",
     "dashboardStats": {
       "totalBookings": "Total bookings",
       "pendingBookings": "Pending bookings",

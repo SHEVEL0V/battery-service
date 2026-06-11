@@ -54,7 +54,7 @@ export function Header({
               textDecoration: "none",
             }}
           >
-            Tesla Battery
+            Battery
           </Box>
 
           {/* Navigation */}

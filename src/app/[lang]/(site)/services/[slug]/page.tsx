@@ -4,9 +4,8 @@ import type { Metadata } from "next";
 import { getDictionary, hasLocale } from "@/i18n/config";
 import { getServiceBySlug } from "@/features/services/queries";
 import { formatPrice } from "@/features/services/format";
+import routes from "@/lib/routing/routes";
 import NextLink from "@/components/ui/NextLink";
-
-export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -17,12 +16,9 @@ export async function generateMetadata({
   const service = await getServiceBySlug(slug, lang);
   if (!service) return {};
 
-  const title = lang === "uk" ? service.titleUk : service.titleEn;
-  const description = lang === "uk" ? service.descUk : service.descEn;
-
   return {
-    title,
-    description,
+    title: service.title,
+    description: service.description,
     alternates: {
       canonical: `/${lang}/services/${slug}`,
       languages: {
@@ -44,25 +40,22 @@ export default async function ServiceDetailPage({ params }: PageProps<"/[lang]/s
 
   if (!service) notFound();
 
-  const title = lang === "uk" ? service.titleUk : service.titleEn;
-  const desc = lang === "uk" ? service.descUk : service.descEn;
-
   return (
     <Box component="section" sx={{ py: { xs: 8, md: 12 } }}>
       <Container maxWidth="md">
         <Stack sx={{ gap: 4 }}>
           <Button
             component={NextLink}
-            href={`/${lang}/services`}
+            href={routes(lang).services}
             variant="text"
             sx={{ alignSelf: "flex-start" }}
           >
             {servicesPage.back}
           </Button>
 
-          <Typography variant="h1">{title}</Typography>
+          <Typography variant="h1">{service.title}</Typography>
           <Typography variant="body1" color="text.secondary">
-            {desc}
+            {service.description}
           </Typography>
 
           <Stack direction="row" spacing={6}>
@@ -84,7 +77,7 @@ export default async function ServiceDetailPage({ params }: PageProps<"/[lang]/s
 
           <Button
             component={NextLink}
-            href={`/${lang}/booking`}
+            href={routes(lang).booking}
             variant="contained"
             size="large"
             sx={{ alignSelf: "flex-start" }}

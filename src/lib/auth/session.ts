@@ -1,10 +1,11 @@
 import "server-only";
 
 import { SignJWT, jwtVerify } from "jose";
+import type { Role } from "@g/prisma";
 
 export interface SessionPayload {
   userId: string;
-  role: "ADMIN" | "SUPERADMIN";
+  role: Role;
   expiresAt: Date;
 }
 

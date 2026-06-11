@@ -7,7 +7,7 @@ export default async function AdminLayout({ children, params }: LayoutProps<"/[l
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
 
-  await verifySession();
+  await verifySession(lang);
   const { admin } = await getDictionary(lang);
 
   return (

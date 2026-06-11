@@ -3,6 +3,7 @@
 import { Box, Container, Button, Stack, Typography } from "@mui/material";
 import { ScrollReveal } from "@/components/animation/ScrollReveal";
 import { Dictionary, Locale } from "@/i18n/config";
+import routes from "@/lib/routing/routes";
 import NextLink from "@/components/ui/NextLink";
 import { SectionBackgroundImage } from "@/components/ui/SectionBackgroundImage";
 import { brandOverlaySx } from "@/lib/styles/sectionBackground";
@@ -29,7 +30,7 @@ export function BookingCTA({ dict, lang }: { dict: Dictionary["bookingCTA"]; lan
             </Typography>
             <Button
               component={NextLink}
-              href={`/${lang}/booking`}
+              href={routes(lang).booking}
               variant="contained"
               size="large"
               sx={{

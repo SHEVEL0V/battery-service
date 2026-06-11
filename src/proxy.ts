@@ -33,14 +33,16 @@ export async function proxy(request: NextRequest) {
   const isAuthRoute = pathname.includes("/login");
 
   if (isAdminRoute || isAuthRoute) {
+    // Перший сегмент гарантовано є локаллю — перевірено pathnameHasLocale вище
+    const locale = pathname.split("/")[1];
     const cookie = request.cookies.get("session")?.value;
     const session = await decrypt(cookie);
 
     if (isAdminRoute && !session?.userId) {
-      return NextResponse.redirect(new URL("/uk/login", request.url));
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
     }
     if (isAuthRoute && session?.userId) {
-      return NextResponse.redirect(new URL("/uk/admin", request.url));
+      return NextResponse.redirect(new URL(`/${locale}/admin`, request.url));
     }
   }
 }

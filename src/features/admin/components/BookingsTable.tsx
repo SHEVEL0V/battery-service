@@ -53,6 +53,7 @@ export function BookingsTable({ bookings }: { bookings: Booking[] }) {
             <TableCell>Name</TableCell>
             <TableCell>Contact</TableCell>
             <TableCell>Car</TableCell>
+            <TableCell>Preferred date</TableCell>
             <TableCell>Created</TableCell>
             <TableCell>Status</TableCell>
           </TableRow>
@@ -69,6 +70,11 @@ export function BookingsTable({ bookings }: { bookings: Booking[] }) {
               </TableCell>
               <TableCell>
                 {booking.carModel} ({booking.year})
+              </TableCell>
+              <TableCell>
+                {booking.preferredDate
+                  ? new Date(booking.preferredDate).toLocaleDateString()
+                  : "—"}
               </TableCell>
               <TableCell>{new Date(booking.createdAt).toLocaleDateString()}</TableCell>
               <TableCell>

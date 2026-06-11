@@ -6,6 +6,7 @@ import prisma from "@/lib/db/prisma";
 import { sendEmail } from "@/lib/integrations/mail";
 import { sendTelegramNotification } from "@/lib/integrations/telegram";
 import { CACHE_TAGS } from "@/lib/cache/cache-tags";
+import { getDictionary, hasLocale, defaultLocale } from "@/i18n/config";
 import { bookingSchema } from "./schema";
 
 export interface BookingState {
@@ -18,6 +19,9 @@ export async function createBooking(
   _prevState: BookingState,
   formData: FormData,
 ): Promise<BookingState> {
+  const lang = formData.get("lang");
+  const locale = typeof lang === "string" && hasLocale(lang) ? lang : defaultLocale;
+
   const validated = bookingSchema.safeParse({
     name: formData.get("name"),
     phone: formData.get("phone"),
@@ -34,14 +38,15 @@ export async function createBooking(
 
   const { date, ...bookingData } = validated.data;
 
-  const booking = await prisma.booking.create({
-    data: {
-      ...bookingData,
-      message: bookingData.message
-        ? `${bookingData.message}\n\nБажана дата: ${date}`
-        : `Бажана дата: ${date}`,
-    },
-  });
+  let booking;
+  try {
+    booking = await prisma.booking.create({
+      data: { ...bookingData, preferredDate: new Date(date) },
+    });
+  } catch {
+    const dict = await getDictionary(locale);
+    return { error: dict.errors.serverError };
+  }
 
   const clientEmailHtml = `
     <h2>Дякуємо за вашу заявку!</h2>
@@ -49,8 +54,6 @@ export async function createBooking(
     <p>Наша команда зв'яжеться з вами найближчим часом.</p>
     <p>ID заявки: ${booking.id}</p>
   `;
-  await sendEmail(validated.data.email, "Підтвердження заявки", clientEmailHtml);
-
   const adminMessage = `
     <b>Нова заявка на ремонт батареї!</b>
     Ім'я: ${validated.data.name}
@@ -60,7 +63,12 @@ export async function createBooking(
     Бажана дата: ${date}
     Повідомлення: ${validated.data.message ?? "Немає"}
   `;
-  await sendTelegramNotification(adminMessage);
+
+  // Сповіщення некритичні для користувача — не блокують успіх запису
+  await Promise.allSettled([
+    sendEmail(validated.data.email, "Підтвердження заявки", clientEmailHtml),
+    sendTelegramNotification(adminMessage),
+  ]);
 
   revalidateTag(CACHE_TAGS.bookings, "default");
 

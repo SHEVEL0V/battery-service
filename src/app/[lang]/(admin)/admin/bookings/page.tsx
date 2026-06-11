@@ -2,6 +2,7 @@ import { Box, Chip, Container, Stack, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
 import prisma from "@/lib/db/prisma";
 import NextLink from "@/components/ui/NextLink";
+import routes from "@/lib/routing/routes";
 import { hasLocale } from "@/i18n/config";
 import { BookingsTable } from "@/features/admin/components/BookingsTable";
 import type { BookingStatus } from "@/types";
@@ -36,7 +37,7 @@ export default async function AdminBookingsPage({
             <Chip
               label={`Status: ${statusFilter} ✕`}
               component={NextLink}
-              href={`/${lang}/admin/bookings`}
+              href={routes(lang).adminBookings}
               clickable
               color="primary"
               variant="outlined"

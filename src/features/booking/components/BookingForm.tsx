@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { Box, Container, Paper, Step, StepLabel, Stepper } from "@mui/material";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import type { Dictionary } from "@/i18n/config";
+import type { Dictionary, Locale } from "@/i18n/config";
 import { ScrollReveal } from "@/components/animation/ScrollReveal";
 import { SectionBackgroundImage } from "@/components/ui/SectionBackgroundImage";
 import { adaptiveOverlaySx, adaptiveOverlayVarsSx } from "@/lib/styles/sectionBackground";
@@ -25,9 +25,10 @@ const stepVariants = {
 interface Props {
   dict: Dictionary["booking"];
   errorsDict: Dictionary["errors"];
+  lang: Locale;
 }
 
-export function BookingForm({ dict, errorsDict }: Props) {
+export function BookingForm({ dict, errorsDict, lang }: Props) {
   const [step, setStep] = useState<BookingStep>(1);
   const [draft, setDraft] = useState<BookingDraft>({});
   const [direction, setDirection] = useState(1);
@@ -93,6 +94,7 @@ export function BookingForm({ dict, errorsDict }: Props) {
                   />
                 ) : (
                   <form action={action}>
+                    <input type="hidden" name="lang" value={lang} />
                     <input type="hidden" name="carModel" value={draft.carModel ?? ""} />
                     <input type="hidden" name="year" value={draft.year ?? ""} />
                     <input type="hidden" name="date" value={draft.date ?? ""} />

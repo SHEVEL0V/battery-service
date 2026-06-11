@@ -1,9 +1,14 @@
 import { Paper, Typography } from "@mui/material";
-import type { Dictionary } from "@/i18n/config";
+import type { Locale } from "@/config/locales";
+import type { LocalizedService } from "../types";
+import { formatPrice } from "../format";
 
-type ServiceItem = Dictionary["services"]["services"][number];
+interface Props {
+  service: LocalizedService;
+  lang: Locale;
+}
 
-export function ServiceCard({ title, desc, price }: ServiceItem) {
+export function ServiceCard({ service, lang }: Props) {
   return (
     <Paper
       sx={{
@@ -15,13 +20,13 @@ export function ServiceCard({ title, desc, price }: ServiceItem) {
       }}
     >
       <Typography variant="h3" gutterBottom>
-        {title}
+        {service.title}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-        {desc}
+        {service.description}
       </Typography>
       <Typography variant="h4" color="primary" sx={{ mt: "auto" }}>
-        {price}
+        {formatPrice(service.price, lang)}
       </Typography>
     </Paper>
   );

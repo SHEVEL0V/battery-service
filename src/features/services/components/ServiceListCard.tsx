@@ -1,26 +1,24 @@
 import { Button, Paper, Stack, Typography } from "@mui/material";
 import NextLink from "@/components/ui/NextLink";
 import type { Dictionary, Locale } from "@/i18n/config";
-import type { Service } from "@/types";
+import routes from "@/lib/routing/routes";
+import type { LocalizedService } from "../types";
 import { formatPrice } from "../format";
 
 interface Props {
-  service: Service;
+  service: LocalizedService;
   lang: Locale;
   dict: Dictionary["servicesPage"];
 }
 
 export function ServiceListCard({ service, lang, dict }: Props) {
-  const title = lang === "uk" ? service.titleUk : service.titleEn;
-  const desc = lang === "uk" ? service.descUk : service.descEn;
-
   return (
     <Paper sx={{ p: 3, height: "100%", display: "flex", flexDirection: "column" }}>
       <Typography variant="h3" gutterBottom>
-        {title}
+        {service.title}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-        {desc}
+        {service.description}
       </Typography>
 
       <Stack direction="row" spacing={3} sx={{ mb: 3 }}>
@@ -42,7 +40,7 @@ export function ServiceListCard({ service, lang, dict }: Props) {
 
       <Button
         component={NextLink}
-        href={`/${lang}/services/${service.slug}`}
+        href={routes(lang).service(service.slug)}
         variant="outlined"
         sx={{ mt: "auto", alignSelf: "flex-start" }}
       >

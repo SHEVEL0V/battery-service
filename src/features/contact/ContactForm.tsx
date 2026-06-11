@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { Box, Button, Paper, Stack, TextField, Typography } from "@mui/material";
-import type { Dictionary } from "@/i18n/config";
+import type { Dictionary, Locale } from "@/i18n/config";
 import { submitContact, type ContactState } from "./actions";
 import { BookingSuccess } from "@/features/booking/components/BookingSuccess";
 
@@ -10,9 +10,10 @@ const initialState: ContactState = {};
 
 interface Props {
   dict: Dictionary["contacts"]["form"];
+  lang: Locale;
 }
 
-export function ContactForm({ dict }: Props) {
+export function ContactForm({ dict, lang }: Props) {
   const [state, action, isPending] = useActionState(submitContact, initialState);
 
   if (state.success) {
@@ -22,6 +23,7 @@ export function ContactForm({ dict }: Props) {
   return (
     <Paper sx={{ p: { xs: 3, md: 5 } }}>
       <form action={action}>
+        <input type="hidden" name="lang" value={lang} />
         <Stack spacing={3}>
           <TextField
             name="name"

@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { FormControlLabel, Grid, Switch, TextField } from "@mui/material";
-import { MutationDialog } from "@/components/ui/MutationDialog";
+import { MutationDialog, type MutationResult } from "@/components/ui/MutationDialog";
 import type { Service } from "@/types";
-import type { UpdateServiceState } from "../actions";
 import type { ServiceInput } from "../schema";
+
+export interface ServiceFormResult extends MutationResult {
+  errors?: Partial<Record<keyof ServiceInput, string[]>>;
+}
 
 const EMPTY_FORM: ServiceInput = {
   slug: "",
@@ -62,7 +65,7 @@ function formStateFor(target: ServiceFormTarget): ServiceInput | null {
 interface ServiceFormDialogProps {
   target: ServiceFormTarget;
   onClose: () => void;
-  onSave: (target: Service | "new", input: ServiceInput) => Promise<UpdateServiceState>;
+  onSave: (target: Service | "new", input: ServiceInput) => Promise<ServiceFormResult>;
 }
 
 export function ServiceFormDialog({ target, onClose, onSave }: ServiceFormDialogProps) {

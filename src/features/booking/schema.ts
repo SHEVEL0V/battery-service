@@ -10,7 +10,10 @@ export const bookingSchema = z.object({
     .int()
     .min(2012, "Tesla виробляється з 2012 р.")
     .max(new Date().getFullYear() + 1),
-  date: z.string().min(1, "required"),
+  date: z
+    .string()
+    .min(1, "required")
+    .refine((value) => !Number.isNaN(Date.parse(value)), "required"),
   message: z.string().optional(),
 });
 

@@ -8,5 +8,5 @@ export default async function BookingPage({ params }: PageProps<"/[lang]/booking
 
   const { booking, errors } = await getDictionary(lang);
 
-  return <BookingForm dict={booking} errorsDict={errors} />;
+  return <BookingForm dict={booking} errorsDict={errors} lang={lang} />;
 }

@@ -39,7 +39,8 @@ export async function deleteReview(id: string) {
 
 export interface UpdateServiceState {
   success?: boolean;
-  error?: string;
+  // Стабільний код помилки — локалізований текст підставляє клієнт зі словника
+  error?: "saveFailed";
   errors?: Partial<Record<keyof ServiceInput, string[]>>;
 }
 
@@ -54,7 +55,7 @@ export async function createService(input: ServiceInput): Promise<UpdateServiceS
   try {
     await prisma.service.create({ data: validated.data });
   } catch {
-    return { error: "Failed to create service. Slug may already be in use." };
+    return { error: "saveFailed" };
   }
 
   revalidateTag(CACHE_TAGS.services, "default");
@@ -75,7 +76,7 @@ export async function updateService(id: string, input: ServiceInput): Promise<Up
       data: validated.data,
     });
   } catch {
-    return { error: "Failed to update service. Slug may already be in use." };
+    return { error: "saveFailed" };
   }
 
   revalidateTag(CACHE_TAGS.services, "default");

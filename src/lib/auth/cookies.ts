@@ -1,13 +1,13 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import { encrypt, decrypt } from "./session";
-import type { SessionPayload } from "./session";
+import type { Role } from "@g/prisma";
+import { encrypt } from "./session";
 
 const COOKIE_NAME = "session";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
-export async function createSession(userId: string, role: "ADMIN" | "SUPERADMIN") {
+export async function createSession(userId: string, role: Role) {
   const expiresAt = new Date(Date.now() + COOKIE_MAX_AGE * 1000);
   const token = await encrypt({ userId, role, expiresAt });
 
@@ -23,5 +23,3 @@ export async function createSession(userId: string, role: "ADMIN" | "SUPERADMIN"
 export async function deleteSession() {
   (await cookies()).delete(COOKIE_NAME);
 }
-
-export type { SessionPayload };

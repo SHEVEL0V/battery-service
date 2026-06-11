@@ -17,14 +17,23 @@ import {
 } from "@mui/material";
 import type { Service } from "@/types";
 import { createService, updateService, type UpdateServiceState } from "../actions";
-import { ServiceFormDialog, type ServiceFormTarget } from "./ServiceFormDialog";
+import {
+  ServiceFormDialog,
+  type ServiceFormResult,
+  type ServiceFormTarget,
+} from "./ServiceFormDialog";
 import type { ServiceInput } from "../schema";
 
 type OptimisticAction =
   | { type: "create"; service: Service }
   | { type: "update"; service: Service };
 
-export function ServicesTable({ services }: { services: Service[] }) {
+interface ServicesTableProps {
+  services: Service[];
+  saveErrorText: string;
+}
+
+export function ServicesTable({ services, saveErrorText }: ServicesTableProps) {
   const router = useRouter();
   const [target, setTarget] = useState<ServiceFormTarget>(null);
   const [, startTransition] = useTransition();
@@ -38,19 +47,23 @@ export function ServicesTable({ services }: { services: Service[] }) {
     },
   );
 
-  const handleSave = (saveTarget: Service | "new", input: ServiceInput): Promise<UpdateServiceState> => {
+  // Server Action повертає стабільний код помилки — текст підставляємо зі словника
+  const withLocalizedError = (result: UpdateServiceState): ServiceFormResult =>
+    result.error ? { ...result, error: saveErrorText } : result;
+
+  const handleSave = (saveTarget: Service | "new", input: ServiceInput): Promise<ServiceFormResult> => {
     return new Promise((resolve) => {
       startTransition(async () => {
         if (saveTarget === "new") {
           applyOptimistic({ type: "create", service: { id: `optimistic-${Date.now()}`, ...input } });
           const result = await createService(input);
           if (result.success) router.refresh();
-          resolve(result);
+          resolve(withLocalizedError(result));
           return;
         }
 
         applyOptimistic({ type: "update", service: { ...saveTarget, ...input } });
-        resolve(await updateService(saveTarget.id, input));
+        resolve(withLocalizedError(await updateService(saveTarget.id, input)));
       });
     });
   };

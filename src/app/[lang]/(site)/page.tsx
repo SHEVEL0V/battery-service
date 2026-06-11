@@ -8,20 +8,23 @@ import { BookingCTA } from "@/features/booking/components/BookingCTA";
 import { MapSection } from "@/features/map/components/MapSection";
 import { notFound } from "next/navigation";
 import { getDictionary, hasLocale } from "@/i18n/config";
+import { getActiveServices } from "@/features/services/queries";
 
 export default async function HomePage({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
 
   if (!hasLocale(lang)) notFound();
 
-  const { hero, stats, services, howItWorks, whyUs, reviews, bookingCTA, map } =
-    await getDictionary(lang);
+  const [
+    { hero, stats, services, howItWorks, whyUs, reviews, bookingCTA, map },
+    activeServices,
+  ] = await Promise.all([getDictionary(lang), getActiveServices(lang)]);
 
   return (
     <main>
       <Hero dict={hero} lang={lang} />
       <Stats dict={stats} />
-      <ServicesList dict={services} />
+      <ServicesList dict={services} services={activeServices} lang={lang} />
       <HowItWorks dict={howItWorks} />
       <WhyUs dict={whyUs} />
       <ReviewsCarousel dict={reviews} lang={lang} />

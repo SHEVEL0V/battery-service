@@ -3,6 +3,7 @@ import type { Locale } from "@/config/locales";
 const routes = (lang: Locale) => ({
   home: `/${lang}`,
   services: `/${lang}/services`,
+  service: (slug: string) => `/${lang}/services/${slug}`,
   booking: `/${lang}/booking`,
   contacts: `/${lang}/contacts`,
   login: `/${lang}/login`,

@@ -1,14 +1,16 @@
 model Booking {
-  id        String        @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  phone     String
-  email     String
-  carModel  String
-  year      Int
-  message   String?
-  status    BookingStatus @default(PENDING)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  phone         String
+  email         String
+  carModel      String
+  year          Int
+  // Optional: записи, створені до появи поля, його не мають
+  preferredDate DateTime?
+  message       String?
+  status        BookingStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 enum BookingStatus {
