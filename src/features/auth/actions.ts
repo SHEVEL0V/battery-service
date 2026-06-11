@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/db/prisma";
 import { createSession, deleteSession } from "@/lib/auth/cookies";
-import { hasLocale, defaultLocale } from "@/i18n/config";
+import { getDictionary, hasLocale, defaultLocale } from "@/i18n/config";
 import { loginSchema } from "./schema";
 
 export interface LoginState {
@@ -13,6 +13,10 @@ export interface LoginState {
 }
 
 export async function login(prevState: LoginState, formData: FormData): Promise<LoginState> {
+  const lang = formData.get("lang");
+  const locale = typeof lang === "string" && hasLocale(lang) ? lang : defaultLocale;
+  const dict = await getDictionary(locale);
+
   const validated = loginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
@@ -22,23 +26,26 @@ export async function login(prevState: LoginState, formData: FormData): Promise<
     return { errors: validated.error.flatten().fieldErrors };
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: validated.data.email },
-  });
+  let user;
+  try {
+    user = await prisma.user.findUnique({
+      where: { email: validated.data.email },
+    });
+  } catch {
+    return { message: dict.errors.serverError };
+  }
 
   if (!user) {
-    return { message: "Невірний email або пароль" };
+    return { message: dict.auth.invalidCredentials };
   }
 
   const passwordMatch = await bcrypt.compare(validated.data.password, user.password);
   if (!passwordMatch) {
-    return { message: "Невірний email або пароль" };
+    return { message: dict.auth.invalidCredentials };
   }
 
   await createSession(user.id, user.role);
 
-  const lang = formData.get("lang");
-  const locale = typeof lang === "string" && hasLocale(lang) ? lang : defaultLocale;
   redirect(`/${locale}/admin`);
 }
 

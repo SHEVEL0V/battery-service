@@ -2,13 +2,15 @@ import { Box, Container, Grid, Paper, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
 import prisma from "@/lib/db/prisma";
 import NextLink from "@/components/ui/NextLink";
-import { hasLocale } from "@/i18n/config";
+import { getDictionary, hasLocale } from "@/i18n/config";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage({ params }: PageProps<"/[lang]/admin">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
+
+  const { admin } = await getDictionary(lang);
 
   const [bookingsCount, pendingCount, servicesCount, pendingReviewsCount, contactsCount] =
     await Promise.all([
@@ -20,18 +22,18 @@ export default async function AdminPage({ params }: PageProps<"/[lang]/admin">) 
     ]);
 
   const stats = [
-    { label: "Total bookings", value: bookingsCount, href: `/${lang}/admin/bookings` },
-    { label: "Pending bookings", value: pendingCount, href: `/${lang}/admin/bookings?status=PENDING` },
-    { label: "Active services", value: servicesCount, href: `/${lang}/admin/services` },
-    { label: "Pending reviews", value: pendingReviewsCount, href: `/${lang}/admin/reviews` },
-    { label: "Contact messages", value: contactsCount, href: `/${lang}/admin/contacts` },
+    { label: admin.dashboardStats.totalBookings, value: bookingsCount, href: `/${lang}/admin/bookings` },
+    { label: admin.dashboardStats.pendingBookings, value: pendingCount, href: `/${lang}/admin/bookings?status=PENDING` },
+    { label: admin.dashboardStats.activeServices, value: servicesCount, href: `/${lang}/admin/services` },
+    { label: admin.dashboardStats.pendingReviews, value: pendingReviewsCount, href: `/${lang}/admin/reviews` },
+    { label: admin.dashboardStats.contactMessages, value: contactsCount, href: `/${lang}/admin/contacts` },
   ];
 
   return (
     <Box sx={{ py: 8 }}>
       <Container maxWidth="lg">
         <Typography variant="h2" sx={{ mb: 4 }}>
-          Admin Dashboard
+          {admin.dashboard}
         </Typography>
 
         <Grid container spacing={3}>
