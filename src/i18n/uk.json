@@ -127,7 +127,14 @@
     "reviews": "Відгуки",
     "contacts": "Звернення",
     "logout": "Вийти",
-    "viewSite": "На сайт"
+    "viewSite": "На сайт",
+    "dashboardStats": {
+      "totalBookings": "Всього записів",
+      "pendingBookings": "Записи в очікуванні",
+      "activeServices": "Активні послуги",
+      "pendingReviews": "Відгуки на модерації",
+      "contactMessages": "Звернення"
+    }
   },
   "servicesPage": {
     "title": "Наші послуги",
@@ -155,7 +162,8 @@
   "errors": {
     "required": "Обов'язкове поле",
     "invalidEmail": "Невірний email",
-    "minLength": "Занадто короткий"
+    "minLength": "Занадто короткий",
+    "serverError": "Сталася помилка. Спробуйте ще раз."
   },
   "notFoundPage": {
     "title": "404",

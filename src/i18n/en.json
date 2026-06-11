@@ -127,7 +127,14 @@
     "reviews": "Reviews",
     "contacts": "Contacts",
     "logout": "Log Out",
-    "viewSite": "View Site"
+    "viewSite": "View Site",
+    "dashboardStats": {
+      "totalBookings": "Total bookings",
+      "pendingBookings": "Pending bookings",
+      "activeServices": "Active services",
+      "pendingReviews": "Pending reviews",
+      "contactMessages": "Contact messages"
+    }
   },
   "servicesPage": {
     "title": "Our Services",
@@ -155,7 +162,8 @@
   "errors": {
     "required": "Required field",
     "invalidEmail": "Invalid email",
-    "minLength": "Too short"
+    "minLength": "Too short",
+    "serverError": "Something went wrong. Please try again."
   },
   "notFoundPage": {
     "title": "404",
