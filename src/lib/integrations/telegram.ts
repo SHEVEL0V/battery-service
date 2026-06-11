@@ -1,9 +1,5 @@
-import TelegramBot from "node-telegram-bot-api";
-
 const token = process.env.TELEGRAM_BOT_TOKEN || "";
 const chatId = process.env.TELEGRAM_CHAT_ID || "";
-
-const bot = new TelegramBot(token, { polling: false });
 
 export async function sendTelegramNotification(
   message: string,
@@ -14,7 +10,17 @@ export async function sendTelegramNotification(
       return { success: false, error: "Telegram not configured" };
     }
 
-    await bot.sendMessage(chatId, message, { parse_mode: "HTML" });
+    const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: "HTML" }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`Telegram API error ${response.status}: ${body}`);
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Telegram sending error:", error);

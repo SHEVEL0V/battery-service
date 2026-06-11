@@ -1,5 +1,5 @@
 import { Box, Container, Typography } from "@mui/material";
-import type { Dictionary } from "@/dictionaries";
+import type { Dictionary } from "@/i18n/config";
 import { MapClient } from "./MapClient";
 
 export function MapSection({ dict }: { dict: Dictionary["map"] }) {

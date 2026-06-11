@@ -2,7 +2,7 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import prisma from "@/lib/db/prisma";
 import { CACHE_TAGS } from "@/lib/cache/cache-tags";
-import type { Locale } from "@/dictionaries";
+import type { Locale } from "@/i18n/config";
 
 export const getActiveServices = unstable_cache(
   async (locale: Locale) => {

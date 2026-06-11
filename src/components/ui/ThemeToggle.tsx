@@ -15,9 +15,8 @@ export function ThemeToggle() {
       color="inherit"
       title={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
       sx={{
-        border: "1px solid",
-        borderColor: "divider",
-        borderRadius: 2,
+        bgcolor: "background.paper",
+        borderRadius: "50%",
         p: 0.75,
       }}
     >

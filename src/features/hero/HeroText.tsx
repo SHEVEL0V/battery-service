@@ -2,7 +2,7 @@
 
 import { Typography } from "@mui/material";
 import { motion } from "framer-motion";
-import type { Dictionary } from "@/dictionaries";
+import type { Dictionary } from "@/i18n/config";
 
 const container = {
   hidden: { opacity: 0 },

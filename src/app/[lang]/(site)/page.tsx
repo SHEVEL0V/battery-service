@@ -7,7 +7,7 @@ import { ReviewsCarousel } from "@/features/reviews/ReviewsCarousel";
 import { BookingCTA } from "@/features/booking/components/BookingCTA";
 import { MapSection } from "@/features/map/MapSection";
 import { notFound } from "next/navigation";
-import { getDictionary, hasLocale } from "@/dictionaries";
+import { getDictionary, hasLocale } from "@/i18n/config";
 
 export default async function HomePage({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
@@ -19,13 +19,13 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
 
   return (
     <main>
-      <Hero dict={hero} />
+      <Hero dict={hero} lang={lang} />
       <Stats dict={stats} />
       <ServicesList dict={services} />
       <HowItWorks dict={howItWorks} />
       <WhyUs dict={whyUs} />
-      <ReviewsCarousel dict={reviews} />
-      <BookingCTA dict={bookingCTA} />
+      <ReviewsCarousel dict={reviews} lang={lang} />
+      <BookingCTA dict={bookingCTA} lang={lang} />
       <MapSection dict={map} />
     </main>
   );

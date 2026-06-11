@@ -2,19 +2,29 @@
 import { Box, Button, Container, Stack } from "@mui/material";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import type { Dictionary } from "@/dictionaries";
+import type { Dictionary, Locale } from "@/i18n/config";
 import routes from "@/lib/routing/routes";
 import LocaleSwitcher from "@/components/ui/LocaleSwitcher";
 
-export function Header({ dict }: { dict: Dictionary["nav"] }) {
+export function Header({
+  dict,
+  lang,
+  isAuthenticated,
+}: {
+  dict: Dictionary["nav"];
+  lang: Locale;
+  isAuthenticated: boolean;
+}) {
+  const r = routes(lang);
+
   return (
     <Box
       component="header"
       sx={{
         py: 2,
-        borderBottom: "1px solid",
-        borderColor: "divider",
-        bgcolor: "background.paper",
+        bgcolor: "color-mix(in srgb, var(--mui-palette-background-paper) 72%, transparent)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
         position: "sticky",
         top: 0,
         zIndex: 1100,
@@ -33,10 +43,13 @@ export function Header({ dict }: { dict: Dictionary["nav"] }) {
           {/* Logo / Name */}
           <Box
             component={Link}
-            href={routes.home}
+            href={r.home}
             sx={{
-              fontSize: "1.5rem",
-              fontWeight: 800,
+              fontFamily: "var(--font-manrope), system-ui, sans-serif",
+              fontSize: "1.25rem",
+              fontWeight: 700,
+              letterSpacing: "0.25em",
+              textTransform: "uppercase",
               color: "primary.main",
               textDecoration: "none",
             }}
@@ -48,18 +61,23 @@ export function Header({ dict }: { dict: Dictionary["nav"] }) {
           <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
             {/* Links */}
             <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
-              <Button component={Link} href={routes.services} color="inherit" size="small">
+              <Button component={Link} href={r.services} color="inherit" size="small">
                 {dict.services}
               </Button>
-              <Button component={Link} href={routes.contacts} color="inherit" size="small">
+              <Button component={Link} href={r.contacts} color="inherit" size="small">
                 {dict.contacts}
               </Button>
+              {isAuthenticated && (
+                <Button component={Link} href={r.admin} color="inherit" size="small">
+                  {dict.admin}
+                </Button>
+              )}
             </Stack>
 
             {/* Action button */}
             <Button
               component={Link}
-              href={routes.booking}
+              href={r.booking}
               variant="contained"
               color="primary"
               size="small"

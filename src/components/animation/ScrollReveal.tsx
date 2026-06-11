@@ -1,13 +1,14 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ReactNode } from 'react'
+import { CSSProperties, ReactNode } from 'react'
 
 interface ScrollRevealProps {
   children: ReactNode
   delay?: number
   direction?: 'up' | 'left' | 'right'
   once?: boolean
+  style?: CSSProperties
 }
 
 const directionVariants = {
@@ -30,6 +31,7 @@ export function ScrollReveal({
   delay = 0,
   direction = 'up',
   once = true,
+  style,
 }: ScrollRevealProps) {
   const variants = directionVariants[direction]
 
@@ -44,6 +46,7 @@ export function ScrollReveal({
         ease: 'easeOut',
       }}
       variants={variants}
+      style={style}
     >
       {children}
     </motion.div>

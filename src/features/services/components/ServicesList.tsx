@@ -3,7 +3,7 @@
 import { Box, Container, Grid, Stack, Typography } from "@mui/material";
 import { ScrollReveal } from "@/components/animation/ScrollReveal";
 import { ServiceCard } from "./ServiceCard";
-import { Dictionary } from "@/dictionaries";
+import { Dictionary } from "@/i18n/config";
 
 export function ServicesList({ dict }: { dict: Dictionary["services"] }) {
   return (
@@ -19,10 +19,10 @@ export function ServicesList({ dict }: { dict: Dictionary["services"] }) {
             </Stack>
           </ScrollReveal>
 
-          <Grid container spacing={3}>
+          <Grid container spacing={3} sx={{ alignItems: "stretch" }}>
             {dict.services.map((service, idx) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={idx}>
-                <ScrollReveal delay={idx * 0.1}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={idx} sx={{ display: "flex" }}>
+                <ScrollReveal delay={idx * 0.1} style={{ width: "100%" }}>
                   <ServiceCard {...service} />
                 </ScrollReveal>
               </Grid>

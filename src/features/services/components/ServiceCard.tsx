@@ -1,5 +1,5 @@
 import { Paper, Typography } from "@mui/material";
-import type { Dictionary } from "@/dictionaries";
+import type { Dictionary } from "@/i18n/config";
 
 type ServiceItem = Dictionary["services"]["services"][number];
 
@@ -9,6 +9,7 @@ export function ServiceCard({ title, desc, price }: ServiceItem) {
       sx={{
         p: 3,
         height: "100%",
+        minHeight: 220,
         display: "flex",
         flexDirection: "column",
       }}

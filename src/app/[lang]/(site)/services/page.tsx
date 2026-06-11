@@ -1,6 +1,6 @@
 import { Box, Container, Grid, Stack, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
-import { getDictionary, hasLocale } from "@/dictionaries";
+import { getDictionary, hasLocale } from "@/i18n/config";
 import { getActiveServices } from "@/features/services/queries";
 import { ServiceListCard } from "@/features/services/components/ServiceListCard";
 

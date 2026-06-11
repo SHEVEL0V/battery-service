@@ -2,12 +2,16 @@
 
 import { Box, Container, Stack, Typography, Paper } from "@mui/material";
 import { ScrollReveal } from "@/components/animation/ScrollReveal";
-import type { Dictionary } from "@/dictionaries";
+import type { Dictionary } from "@/i18n/config";
+import { SectionBackgroundImage } from "@/components/ui/SectionBackgroundImage";
+import { adaptiveOverlaySx, adaptiveOverlayVarsSx } from "@/lib/styles/sectionBackground";
 
 export function HowItWorks({ dict }: { dict: Dictionary["howItWorks"] }) {
   return (
-    <Box component="section" sx={{ py: { xs: 8, md: 12 } }}>
-      <Container maxWidth="lg">
+    <Box component="section" sx={{ py: { xs: 8, md: 12 }, ...adaptiveOverlayVarsSx }}>
+      <SectionBackgroundImage src="/images/how-it-works.jpg" overlaySx={adaptiveOverlaySx} />
+
+      <Container maxWidth="lg" sx={{ position: "relative" }}>
         <ScrollReveal direction="up">
           <Typography variant="h2" sx={{ mb: 6, textAlign: "center" }}>
             {dict.title}

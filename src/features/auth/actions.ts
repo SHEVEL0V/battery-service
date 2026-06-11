@@ -3,8 +3,8 @@
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/db/prisma";
-import { createSession } from "@/lib/auth/cookies";
-import { hasLocale, defaultLocale } from "@/dictionaries";
+import { createSession, deleteSession } from "@/lib/auth/cookies";
+import { hasLocale, defaultLocale } from "@/i18n/config";
 import { loginSchema } from "./schema";
 
 export interface LoginState {
@@ -40,4 +40,12 @@ export async function login(prevState: LoginState, formData: FormData): Promise<
   const lang = formData.get("lang");
   const locale = typeof lang === "string" && hasLocale(lang) ? lang : defaultLocale;
   redirect(`/${locale}/admin`);
+}
+
+export async function logout(formData: FormData): Promise<void> {
+  await deleteSession();
+
+  const lang = formData.get("lang");
+  const locale = typeof lang === "string" && hasLocale(lang) ? lang : defaultLocale;
+  redirect(`/${locale}/login`);
 }

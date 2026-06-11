@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Container, Stack, Typography } from "@mui/material";
-import { Dictionary } from "@/dictionaries";
+import { Dictionary } from "@/i18n/config";
 
 export function Footer({ dict }: { dict: Dictionary["footer"] }) {
   return (
@@ -9,13 +9,11 @@ export function Footer({ dict }: { dict: Dictionary["footer"] }) {
       component="footer"
       sx={{
         py: 4,
-        borderTop: "1px solid",
-        borderColor: "divider",
         bgcolor: "background.paper",
         mt: 8,
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="xl">
         <Stack sx={{ gap: 2 }}>
           <Typography variant="body2" color="text.secondary">
             {dict.description}

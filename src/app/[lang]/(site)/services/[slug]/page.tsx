@@ -1,7 +1,7 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getDictionary, hasLocale } from "@/dictionaries";
+import { getDictionary, hasLocale } from "@/i18n/config";
 import { getServiceBySlug } from "@/features/services/queries";
 import { formatPrice } from "@/features/services/format";
 import NextLink from "@/components/ui/NextLink";

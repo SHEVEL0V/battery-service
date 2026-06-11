@@ -2,7 +2,7 @@
 
 import { Box, Container, Stack, Typography } from "@mui/material";
 import { ScrollReveal } from "@/components/animation/ScrollReveal";
-import { Dictionary } from "@/dictionaries";
+import { Dictionary } from "@/i18n/config";
 
 export function Stats({ dict }: { dict: Dictionary["stats"] }) {
   const stats = [

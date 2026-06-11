@@ -2,19 +2,25 @@
 
 import { Box, Container, Button, Stack, Typography } from "@mui/material";
 import { ScrollReveal } from "@/components/animation/ScrollReveal";
-import { Dictionary } from "@/dictionaries";
+import { Dictionary, Locale } from "@/i18n/config";
+import NextLink from "@/components/ui/NextLink";
+import { SectionBackgroundImage } from "@/components/ui/SectionBackgroundImage";
+import { brandOverlaySx } from "@/lib/styles/sectionBackground";
 
-export function BookingCTA({ dict }: { dict: Dictionary["bookingCTA"] }) {
+export function BookingCTA({ dict, lang }: { dict: Dictionary["bookingCTA"]; lang: Locale }) {
   return (
     <Box
       component="section"
       sx={{
         py: { xs: 8, md: 12 },
-        background: "linear-gradient(135deg, #CC0000 0%, #990000 100%)",
+        position: "relative",
+        overflow: "hidden",
         color: "white",
       }}
     >
-      <Container maxWidth="lg">
+      <SectionBackgroundImage src="/images/service.jpg" overlaySx={brandOverlaySx} />
+
+      <Container maxWidth="lg" sx={{ position: "relative" }}>
         <ScrollReveal direction="up">
           <Stack sx={{ alignItems: "center", textAlign: "center", spacing: 3 }}>
             <Typography variant="h2">{dict.title}</Typography>
@@ -22,14 +28,17 @@ export function BookingCTA({ dict }: { dict: Dictionary["bookingCTA"] }) {
               {dict.description}
             </Typography>
             <Button
+              component={NextLink}
+              href={`/${lang}/booking`}
               variant="contained"
               size="large"
               sx={{
-                bgcolor: "white",
+                bgcolor: "common.white",
                 color: "primary.main",
-                "&:hover": { bgcolor: "#f0f0f0" },
+                "&:hover": { bgcolor: "grey.200" },
                 px: 4,
                 py: 1.5,
+                mt: 2,
                 fontSize: "1rem",
                 fontWeight: 600,
               }}

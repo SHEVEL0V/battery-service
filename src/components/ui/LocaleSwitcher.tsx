@@ -32,14 +32,13 @@ export default function LocaleSwitcher() {
       onChange={handleLocaleChange}
       size="small"
       sx={{
-        border: "1px solid",
-        borderColor: "divider",
-        borderRadius: 2,
+        bgcolor: "background.paper",
+        borderRadius: "999px",
         p: 0.25,
         gap: 0.25,
         "& .MuiToggleButtonGroup-grouped": {
           border: 0,
-          borderRadius: 1.5,
+          borderRadius: "999px",
           minWidth: 36,
           px: 1,
           py: 0.25,

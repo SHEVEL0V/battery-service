@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Box, Button, Stack, TextField, Typography } from "@mui/material";
-import type { Dictionary } from "@/dictionaries";
+import type { Dictionary } from "@/i18n/config";
 import type { BookingDateData } from "../types";
 
 interface Props {

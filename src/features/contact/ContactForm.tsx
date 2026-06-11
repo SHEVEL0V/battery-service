@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { Box, Button, Paper, Stack, TextField, Typography } from "@mui/material";
-import type { Dictionary } from "@/dictionaries";
+import type { Dictionary } from "@/i18n/config";
 import { submitContact, type ContactState } from "./actions";
 import { BookingSuccess } from "@/features/booking/components/BookingSuccess";
 

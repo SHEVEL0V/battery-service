@@ -1,6 +1,6 @@
 import { Box, Container, Paper, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
-import { getDictionary, hasLocale } from "@/dictionaries";
+import { getDictionary, hasLocale } from "@/i18n/config";
 import { LoginForm } from "@/features/auth/LoginForm";
 
 export default async function LoginPage({ params }: PageProps<"/[lang]/login">) {

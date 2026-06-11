@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
-import { hasLocale } from "@/dictionaries";
+import { hasLocale } from "@/i18n/config";
 import { AppProviders } from "@/components/providers/AppProviders";
-import { manrope } from "@/theme";
+import { manrope } from "@/config/fonts";
 
 export async function generateStaticParams() {
   return [{ lang: "uk" }, { lang: "en" }];

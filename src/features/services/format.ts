@@ -1,4 +1,4 @@
-import type { Locale } from "@/dictionaries";
+import type { Locale } from "@/i18n/config";
 
 export function formatPrice(price: number, lang: Locale): string {
   return new Intl.NumberFormat(lang === "uk" ? "uk-UA" : "en-US", {

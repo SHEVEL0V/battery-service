@@ -1,6 +1,6 @@
 import { Button, Paper, Stack, Typography } from "@mui/material";
 import NextLink from "@/components/ui/NextLink";
-import type { Dictionary, Locale } from "@/dictionaries";
+import type { Dictionary, Locale } from "@/i18n/config";
 import type { Service } from "@/types";
 import { formatPrice } from "../format";
 

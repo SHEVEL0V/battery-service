@@ -45,7 +45,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
             <Button onClick={() => reset()} variant="contained">
               {dict.retry}
             </Button>
-            <Button component={NextLink} href="/" variant="outlined">
+            <Button component={NextLink} href={`/${locale}`} variant="outlined">
               {dict.home}
             </Button>
           </Stack>

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getDictionary, hasLocale } from "@/dictionaries";
+import { getDictionary, hasLocale } from "@/i18n/config";
 import { BookingForm } from "@/features/booking/components/BookingForm";
 
 export default async function BookingPage({ params }: PageProps<"/[lang]/booking">) {
