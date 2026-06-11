@@ -4,14 +4,14 @@
 
 **Demo**: https://battery-service-ix7zrlpjp-shevel0vs-projects.vercel.app/en
 
-**Стек**: Next.js (App Router) · TypeScript · MUI · Prisma · PostgreSQL · Framer Motion
+**Стек**: Next.js (App Router) · TypeScript · MUI · Prisma · MongoDB · Framer Motion
 
 ## Запуск
 
 ```bash
 npm install
 npx prisma generate
-npx prisma migrate dev
+npx prisma db push
 npm run dev
 ```
 
