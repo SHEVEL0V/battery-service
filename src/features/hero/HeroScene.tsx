@@ -1,14 +1,12 @@
 "use client";
 
-import { useRef } from "react";
 import { alpha, Box, useTheme } from "@mui/material";
-import {
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useSpring,
-  useTransform,
-} from "framer-motion";
+import { motion } from "framer-motion";
+import { usePointerTilt } from "@/components/animation/usePointerTilt";
+import { AmbientGlow } from "@/components/animation/AmbientGlow";
+import { ChargeFill } from "@/components/animation/ChargeFill";
+import { PulsingPath } from "@/components/animation/PulsingPath";
+import { FloatingSparks } from "@/components/animation/FloatingSparks";
 
 const SPARKS = [
   { cx: 150, cy: 30, delay: 0 },
@@ -19,39 +17,15 @@ const SPARKS = [
 
 export function HeroScene() {
   const theme = useTheme();
-  const prefersReducedMotion = useReducedMotion();
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  const rotateX = useSpring(useMotionValue(0), { stiffness: 150, damping: 20 });
-  const rotateY = useSpring(useMotionValue(0), { stiffness: 150, damping: 20 });
-
-  const glow = useTransform(
-    [rotateX, rotateY],
-    ([rx, ry]: number[]) => `${50 + ry * 2}% ${50 - rx * 2}%`
-  );
-
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (prefersReducedMotion) return;
-    const rect = wrapperRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const px = (event.clientX - rect.left) / rect.width - 0.5;
-    const py = (event.clientY - rect.top) / rect.height - 0.5;
-    rotateY.set(px * 16);
-    rotateX.set(-py * 16);
-  };
-
-  const handlePointerLeave = () => {
-    rotateX.set(0);
-    rotateY.set(0);
-  };
+  const { ref, rotateX, rotateY, glowPosition, onPointerMove, onPointerLeave } = usePointerTilt();
 
   const primary = theme.palette.primary.main;
 
   return (
     <Box
-      ref={wrapperRef}
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
+      ref={ref}
+      onPointerMove={onPointerMove}
+      onPointerLeave={onPointerLeave}
       sx={{
         position: "relative",
         width: "100%",
@@ -60,30 +34,7 @@ export function HeroScene() {
         perspective: 800,
       }}
     >
-      {/* Ambient glow that follows the pointer */}
-      <Box
-        component={motion.div}
-        aria-hidden
-        sx={{
-          position: "absolute",
-          inset: -40,
-          borderRadius: "50%",
-          filter: "blur(40px)",
-          pointerEvents: "none",
-        }}
-        style={{
-          background: useTransform(
-            glow,
-            (pos) => `radial-gradient(circle at ${pos}, ${primary}55, transparent 70%)`
-          ),
-        }}
-        animate={
-          prefersReducedMotion
-            ? undefined
-            : { opacity: [0.5, 0.9, 0.5] }
-        }
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      />
+      <AmbientGlow position={glowPosition} color={primary} />
 
       <Box
         component={motion.div}
@@ -141,62 +92,26 @@ export function HeroScene() {
           <clipPath id="hero-cell-clip">
             <rect x="11" y="16" width="168" height="68" rx="4" ry="4" />
           </clipPath>
-          <motion.rect
-            x="11"
-            y="16"
-            height="68"
-            rx="4"
-            ry="4"
+          <ChargeFill
+            x={11}
+            y={16}
+            height={68}
             fill="url(#hero-charge)"
             clipPath="url(#hero-cell-clip)"
-            initial={{ width: prefersReducedMotion ? 168 : 30 }}
-            animate={
-              prefersReducedMotion
-                ? undefined
-                : { width: [30, 168, 168, 30] }
-            }
-            transition={{
-              duration: 4,
-              times: [0, 0.6, 0.85, 1],
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
+            emptyWidth={30}
+            fullWidth={168}
           />
 
           {/* Energy bolt */}
-          <motion.path
+          <PulsingPath
             d="M103 20 L78 56 L96 56 L92 80 L120 44 L100 44 Z"
             fill="currentColor"
             filter="url(#hero-glow)"
-            initial={{ opacity: 0.6, scale: 1 }}
-            animate={
-              prefersReducedMotion
-                ? undefined
-                : { opacity: [0.5, 1, 0.5], scale: [0.95, 1.05, 0.95] }
-            }
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             style={{ transformOrigin: "100px 50px" }}
           />
 
           {/* Floating sparks */}
-          {!prefersReducedMotion &&
-            SPARKS.map((spark, i) => (
-              <motion.circle
-                key={i}
-                cx={spark.cx}
-                cy={spark.cy}
-                r={1.5}
-                fill="currentColor"
-                initial={{ opacity: 0, y: 0 }}
-                animate={{ opacity: [0, 1, 0], y: -16 }}
-                transition={{
-                  duration: 2.4,
-                  repeat: Infinity,
-                  delay: spark.delay,
-                  ease: "easeOut",
-                }}
-              />
-            ))}
+          <FloatingSparks sparks={SPARKS} />
         </Box>
       </Box>
     </Box>

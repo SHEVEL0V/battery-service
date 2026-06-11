@@ -1,11 +1,11 @@
 "use client";
 
 import { Box, Button, Container, Stack } from "@mui/material";
-import { motion } from "framer-motion";
 import type { Dictionary, Locale } from "@/i18n/config";
 import NextLink from "@/components/ui/NextLink";
 import { SectionBackgroundImage } from "@/components/ui/SectionBackgroundImage";
 import { adaptiveOverlaySx, adaptiveOverlayVarsSx } from "@/lib/styles/sectionBackground";
+import { FadeIn } from "@/components/animation/FadeIn";
 import { HeroText } from "./HeroText";
 import { HeroParticles } from "./HeroParticles";
 import { HeroScene } from "./HeroScene";
@@ -35,11 +35,7 @@ export function Hero({ dict, lang }: { dict: Dictionary["hero"]; lang: Locale })
           >
             <HeroText dict={dict} />
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.5, ease: "easeOut" }}
-            >
+            <FadeIn delay={0.6}>
               <Button
                 component={NextLink}
                 href={`/${lang}/booking`}
@@ -49,7 +45,7 @@ export function Hero({ dict, lang }: { dict: Dictionary["hero"]; lang: Locale })
               >
                 {dict.cta}
               </Button>
-            </motion.div>
+            </FadeIn>
           </Stack>
 
           <Box sx={{ flex: 1, display: { xs: "none", md: "flex" }, justifyContent: "center" }}>
