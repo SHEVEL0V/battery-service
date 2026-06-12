@@ -1,5 +1,8 @@
 "use client";
-import { Box, Button, Container, Stack } from "@mui/material";
+import { useState } from "react";
+import { Box, Button, Container, Divider, Drawer, IconButton, Stack } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import type { Dictionary, Locale } from "@/i18n/config";
@@ -16,6 +19,14 @@ export function Header({
   isAuthenticated: boolean;
 }) {
   const r = routes(lang);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = () => setMenuOpen(false);
+
+  const navLinks = [
+    { href: r.services, label: dict.services },
+    { href: r.contacts, label: dict.contacts },
+    ...(isAuthenticated ? [{ href: r.admin, label: dict.admin }] : []),
+  ];
 
   return (
     <Box
@@ -57,21 +68,19 @@ export function Header({
             Battery
           </Box>
 
-          {/* Navigation */}
-          <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
+          {/* Desktop navigation */}
+          <Stack
+            direction="row"
+            spacing={2}
+            sx={{ alignItems: "center", display: { xs: "none", md: "flex" } }}
+          >
             {/* Links */}
             <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
-              <Button component={Link} href={r.services} color="inherit" size="small">
-                {dict.services}
-              </Button>
-              <Button component={Link} href={r.contacts} color="inherit" size="small">
-                {dict.contacts}
-              </Button>
-              {isAuthenticated && (
-                <Button component={Link} href={r.admin} color="inherit" size="small">
-                  {dict.admin}
+              {navLinks.map((link) => (
+                <Button key={link.href} component={Link} href={link.href} color="inherit" size="small">
+                  {link.label}
                 </Button>
-              )}
+              ))}
             </Stack>
 
             {/* Action button */}
@@ -100,8 +109,66 @@ export function Header({
               <LocaleSwitcher />
             </Stack>
           </Stack>
+
+          {/* Mobile burger */}
+          <IconButton
+            aria-label="menu"
+            onClick={() => setMenuOpen(true)}
+            sx={{ display: { xs: "inline-flex", md: "none" } }}
+          >
+            <MenuIcon />
+          </IconButton>
         </Stack>
       </Container>
+
+      {/* Mobile menu */}
+      <Drawer
+        anchor="right"
+        open={menuOpen}
+        onClose={closeMenu}
+        slotProps={{ paper: { sx: { width: "min(320px, 100vw)" } } }}
+      >
+        <Stack sx={{ p: 2, height: "100%" }}>
+          <Stack direction="row" sx={{ justifyContent: "flex-end" }}>
+            <IconButton aria-label="close menu" onClick={closeMenu}>
+              <CloseIcon />
+            </IconButton>
+          </Stack>
+
+          <Stack spacing={1} sx={{ mt: 2 }}>
+            {navLinks.map((link) => (
+              <Button
+                key={link.href}
+                component={Link}
+                href={link.href}
+                color="inherit"
+                size="large"
+                onClick={closeMenu}
+              >
+                {link.label}
+              </Button>
+            ))}
+            <Button
+              component={Link}
+              href={r.booking}
+              variant="contained"
+              color="primary"
+              size="large"
+              onClick={closeMenu}
+            >
+              {dict.booking}
+            </Button>
+          </Stack>
+
+          <Box sx={{ flexGrow: 1 }} />
+
+          <Divider sx={{ mb: 2 }} />
+          <Stack direction="row" spacing={1} sx={{ alignItems: "center", justifyContent: "center" }}>
+            <ThemeToggle />
+            <LocaleSwitcher />
+          </Stack>
+        </Stack>
+      </Drawer>
     </Box>
   );
 }
