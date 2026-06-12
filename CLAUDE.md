@@ -63,9 +63,9 @@ src/
 │   │       ├── HeroText.tsx
 │   │       ├── HeroParticles.tsx    ← canvas API (client)
 │   │       └── HeroScene.tsx        ← анімована батарея, SVG + Framer Motion (client)
-│   ├── stats/Stats.tsx
-│   ├── how-it-works/HowItWorks.tsx
-│   ├── why-us/WhyUs.tsx
+│   ├── stats/components/Stats.tsx
+│   ├── how-it-works/components/HowItWorks.tsx
+│   ├── why-us/components/WhyUs.tsx
 │   ├── booking/
 │   │   ├── components/
 │   │   │   ├── BookingCTA.tsx
@@ -75,6 +75,7 @@ src/
 │   │   │   ├── BookingStepContact.tsx
 │   │   │   └── BookingSuccess.tsx
 │   │   ├── actions.ts               ← createBooking() 'use server'
+│   │   ├── queries.ts               ← server-only, getBookings/countBookings (admin)
 │   │   ├── schema.ts                ← Zod схеми
 │   │   └── types.ts
 │   ├── services/
@@ -84,24 +85,27 @@ src/
 │   │   │   └── ServicesList.tsx     ← client, дані приходять props'ами з RSC
 │   │   ├── format.ts                ← formatPrice (завжди UAH, формат числа під локаль)
 │   │   ├── types.ts                 ← LocalizedService
-│   │   └── queries.ts               ← server-only, unstable_cache
+│   │   └── queries.ts               ← server-only, unstable_cache + некешовані admin-запити
 │   ├── reviews/
 │   │   ├── components/
 │   │   │   ├── ReviewsCarousel.tsx
 │   │   │   └── AddReviewDialog.tsx
 │   │   ├── actions.ts               ← submitReview() 'use server'
 │   │   ├── schema.ts
-│   │   └── queries.ts               ← server-only, unstable_cache
+│   │   └── queries.ts               ← server-only, unstable_cache + некешовані admin-запити
 │   ├── map/
 │   │   └── components/
 │   │       ├── MapSection.tsx       ← RSC shell
 │   │       └── MapClient.tsx        ← client, @vis.gl/react-google-maps
 │   ├── contact/
-│   │   ├── ContactForm.tsx          ← useActionState (client)
+│   │   ├── components/
+│   │   │   └── ContactForm.tsx      ← useActionState (client)
 │   │   ├── actions.ts               ← submitContact() 'use server'
+│   │   ├── queries.ts               ← server-only, getContacts/countContacts (admin)
 │   │   └── schema.ts                ← Zod схема
 │   ├── auth/
-│   │   ├── LoginForm.tsx            ← useActionState (client)
+│   │   ├── components/
+│   │   │   └── LoginForm.tsx        ← useActionState (client)
 │   │   ├── actions.ts               ← login(), logout() 'use server'
 │   │   └── schema.ts                ← Zod схема
 │   └── admin/
@@ -1084,7 +1088,19 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="..."
 
 - `import 'server-only'` у всіх файлах з Prisma, auth або secrets
 - Ніяких `any` — `unknown` або точні типи
-- Feature-based код: `src/features/booking/`, `src/features/services/` тощо (не під `components/`)
+- Feature-based код: кожна фіча в `src/features/<domain>/` за єдиним шаблоном:
+  ```
+  features/<domain>/
+  ├── components/     ← весь UI фічі (client і RSC), без винятків
+  ├── actions.ts      ← 'use server' мутації
+  ├── queries.ts      ← server-only читання з БД (публічні — unstable_cache, admin — без кешу)
+  ├── schema.ts       ← Zod
+  └── types.ts        ← доменні типи
+  ```
+  Правила:
+  - `prisma` імпортується **тільки** у `queries.ts` / `actions.ts` — ніколи в `page.tsx`, layout чи компонентах
+  - Фічі не імпортують одна одну; спільний код — у `src/components/` або `src/lib/`
+  - Запити/мутації живуть у доменній фічі (booking, services, reviews, contact); `features/admin` — тільки UI адмінки
 - Стилі: тільки MUI `sx` prop або `styled()`, кольори тільки через `theme.palette`
 - `getDictionary` — тільки в RSC, Client Components отримують `dict` через props
 - Внутрішні URL — тільки через `routes(lang)` з `src/lib/routing/routes.ts`, не через template-літерали

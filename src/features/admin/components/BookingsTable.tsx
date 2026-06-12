@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   Chip,
   MenuItem,
@@ -29,6 +30,7 @@ const STATUS_COLORS: Record<BookingStatus, "default" | "info" | "warning" | "suc
 };
 
 export function BookingsTable({ bookings }: { bookings: Booking[] }) {
+  const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -38,6 +40,7 @@ export function BookingsTable({ bookings }: { bookings: Booking[] }) {
     startTransition(async () => {
       await updateBookingStatus(id, status);
       setPendingId(null);
+      router.refresh();
     });
   };
 

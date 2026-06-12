@@ -1,8 +1,8 @@
 import { Box, Container, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
-import prisma from "@/lib/db/prisma";
 import { getDictionary, hasLocale } from "@/i18n/config";
 import { ServicesTable } from "@/features/admin/components/ServicesTable";
+import { getAllServices } from "@/features/services/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +12,7 @@ export default async function AdminServicesPage({ params }: PageProps<"/[lang]/a
 
   const [{ admin }, services] = await Promise.all([
     getDictionary(lang),
-    prisma.service.findMany({ orderBy: { order: "asc" } }),
+    getAllServices(),
   ]);
 
   return (

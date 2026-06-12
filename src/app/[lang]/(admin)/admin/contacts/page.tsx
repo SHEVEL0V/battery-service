@@ -11,8 +11,8 @@ import {
   Typography,
 } from "@mui/material";
 import { notFound } from "next/navigation";
-import prisma from "@/lib/db/prisma";
 import { hasLocale } from "@/i18n/config";
+import { getContacts } from "@/features/contact/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -20,9 +20,7 @@ export default async function AdminContactsPage({ params }: PageProps<"/[lang]/a
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
 
-  const contacts = await prisma.contact.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  const contacts = await getContacts();
 
   return (
     <Box sx={{ py: 8 }}>

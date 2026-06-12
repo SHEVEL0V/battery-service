@@ -13,3 +13,10 @@ export const getVisibleReviews = unstable_cache(
   ["visible-reviews"],
   { tags: [CACHE_TAGS.reviews], revalidate: 3600 },
 );
+
+// Без кешу — для admin-сторінок (force-dynamic)
+export const getAllReviews = () =>
+  prisma.review.findMany({ orderBy: { createdAt: "desc" } });
+
+export const countHiddenReviews = () =>
+  prisma.review.count({ where: { isVisible: false } });

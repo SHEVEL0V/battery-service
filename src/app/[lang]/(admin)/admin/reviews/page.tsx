@@ -1,8 +1,8 @@
 import { Box, Container, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
-import prisma from "@/lib/db/prisma";
 import { hasLocale } from "@/i18n/config";
 import { ReviewsTable } from "@/features/admin/components/ReviewsTable";
+import { getAllReviews } from "@/features/reviews/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -10,9 +10,7 @@ export default async function AdminReviewsPage({ params }: PageProps<"/[lang]/ad
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
 
-  const reviews = await prisma.review.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  const reviews = await getAllReviews();
 
   return (
     <Box sx={{ py: 8 }}>

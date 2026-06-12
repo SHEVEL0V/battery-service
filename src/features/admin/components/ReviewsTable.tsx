@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   Button,
   Chip,
@@ -19,6 +20,7 @@ import type { Review } from "@/types";
 import { deleteReview, toggleReviewVisibility } from "../actions";
 
 export function ReviewsTable({ reviews }: { reviews: Review[] }) {
+  const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -27,6 +29,7 @@ export function ReviewsTable({ reviews }: { reviews: Review[] }) {
     startTransition(async () => {
       await toggleReviewVisibility(id, isVisible);
       setPendingId(null);
+      router.refresh();
     });
   };
 
@@ -35,6 +38,7 @@ export function ReviewsTable({ reviews }: { reviews: Review[] }) {
     startTransition(async () => {
       await deleteReview(id);
       setPendingId(null);
+      router.refresh();
     });
   };
 
