@@ -4,7 +4,7 @@ import { ContactInfoCards, MapClient } from "./MapClient";
 
 export function MapSection({ dict }: { dict: Dictionary["map"] }) {
   return (
-    <Box component="section" sx={{ py: { xs: 8, md: 12 } }}>
+    <Box component="section" sx={{ py: { xs: 8, md: 12 }, overflowX: "clip" }}>
       <Container maxWidth="lg">
         <Typography variant="h2" sx={{ mb: 6, textAlign: "center" }}>
           {dict.title}
