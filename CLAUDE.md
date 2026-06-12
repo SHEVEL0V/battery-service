@@ -18,13 +18,13 @@ src/
 │   │   ├── error.tsx                ← 'use client'
 │   │   ├── not-found.tsx
 │   │   ├── (site)/
-│   │   │   ├── layout.tsx           ← Header + Footer wrapper (RSC)
-│   │   │   ├── page.tsx             ← Головна: секції фіч
+│   │   │   ├── layout.tsx           ← Header + Footer wrapper (RSC), читає cookie сесії → сторінки динамічні
+│   │   │   ├── page.tsx             ← Головна: секції фіч, послуги з БД (getActiveServices)
 │   │   │   ├── services/
 │   │   │   │   ├── page.tsx         ← RSC + unstable_cache
 │   │   │   │   ├── loading.tsx      ← ServicesSkeleton
 │   │   │   │   └── [slug]/
-│   │   │   │       └── page.tsx     ← ISR revalidate:3600
+│   │   │   │       └── page.tsx     ← RSC + unstable_cache (revalidate 3600)
 │   │   │   ├── booking/
 │   │   │   │   └── page.tsx         ← RSC shell
 │   │   │   └── contacts/
@@ -33,12 +33,14 @@ src/
 │   │   │   └── login/
 │   │   │       └── page.tsx         ← RSC shell, рендерить LoginForm
 │   │   └── (admin)/
-│   │       ├── layout.tsx           ← verifySession() auth guard + AdminHeader
+│   │       ├── layout.tsx           ← verifySession(lang) auth guard + AdminHeader
 │   │       └── admin/
 │   │           ├── page.tsx         ← dynamic = 'force-dynamic'
 │   │           ├── bookings/
 │   │           │   └── page.tsx     ← dynamic = 'force-dynamic'
 │   │           ├── services/
+│   │           │   └── page.tsx     ← dynamic = 'force-dynamic'
+│   │           ├── reviews/
 │   │           │   └── page.tsx     ← dynamic = 'force-dynamic'
 │   │           └── contacts/
 │   │               └── page.tsx     ← dynamic = 'force-dynamic'
@@ -46,19 +48,21 @@ src/
 │   └── api/                         ← ПОРОЖНЬО. Всі мутації — Server Actions.
 │
 ├── components/
-│   ├── ui/                          ← Button, Card, Badge, NextLink, ThemeToggle, LocaleSwitcher
+│   ├── ui/                          ← NextLink, ThemeToggle, LocaleSwitcher, MutationDialog, SectionBackgroundImage
 │   ├── layout/                      ← Header (з посиланням "Admin" для залогінених), AdminHeader, Footer
-│   ├── animation/                   ← ScrollReveal (Framer Motion)
+│   ├── animation/                   ← ScrollReveal, FadeIn, StaggerReveal, AmbientGlow, ChargeFill,
+│   │                                  FloatingSparks, PulsingPath, usePointerTilt (Framer Motion)
 │   └── providers/
 │       ├── AppProviders.tsx         ← 'use client', всі провайдери
 │       └── MuiThemeProvider.tsx     ← 'use client', MUI v9 CSS vars
 │
 ├── features/
 │   ├── hero/
-│   │   ├── Hero.tsx
-│   │   ├── HeroText.tsx
-│   │   ├── HeroParticles.tsx        ← canvas API (client)
-│   │   └── HeroScene.tsx            ← анімована батарея, SVG + Framer Motion (client)
+│   │   └── components/
+│   │       ├── Hero.tsx
+│   │       ├── HeroText.tsx
+│   │       ├── HeroParticles.tsx    ← canvas API (client)
+│   │       └── HeroScene.tsx        ← анімована батарея, SVG + Framer Motion (client)
 │   ├── stats/Stats.tsx
 │   ├── how-it-works/HowItWorks.tsx
 │   ├── why-us/WhyUs.tsx
@@ -75,41 +79,56 @@ src/
 │   │   └── types.ts
 │   ├── services/
 │   │   ├── components/
-│   │   │   ├── ServiceCard.tsx      ← RSC
-│   │   │   ├── ServiceListCard.tsx  ← RSC
-│   │   │   └── ServicesList.tsx     ← RSC
-│   │   ├── format.ts
+│   │   │   ├── ServiceCard.tsx      ← картка на головній
+│   │   │   ├── ServiceListCard.tsx  ← картка на /services
+│   │   │   └── ServicesList.tsx     ← client, дані приходять props'ами з RSC
+│   │   ├── format.ts                ← formatPrice (завжди UAH, формат числа під локаль)
+│   │   ├── types.ts                 ← LocalizedService
 │   │   └── queries.ts               ← server-only, unstable_cache
 │   ├── reviews/
-│   │   ├── ReviewsCarousel.tsx
+│   │   ├── components/
+│   │   │   ├── ReviewsCarousel.tsx
+│   │   │   └── AddReviewDialog.tsx
+│   │   ├── actions.ts               ← submitReview() 'use server'
+│   │   ├── schema.ts
 │   │   └── queries.ts               ← server-only, unstable_cache
 │   ├── map/
-│   │   ├── MapSection.tsx           ← RSC shell
-│   │   └── MapClient.tsx            ← client, @vis.gl/react-google-maps
+│   │   └── components/
+│   │       ├── MapSection.tsx       ← RSC shell
+│   │       └── MapClient.tsx        ← client, @vis.gl/react-google-maps
 │   ├── contact/
 │   │   ├── ContactForm.tsx          ← useActionState (client)
 │   │   ├── actions.ts               ← submitContact() 'use server'
 │   │   └── schema.ts                ← Zod схема
 │   ├── auth/
 │   │   ├── LoginForm.tsx            ← useActionState (client)
-│   │   ├── actions.ts               ← login() 'use server'
+│   │   ├── actions.ts               ← login(), logout() 'use server'
 │   │   └── schema.ts                ← Zod схема
 │   └── admin/
-│       ├── BookingsTable.tsx        ← client
-│       └── actions.ts               ← updateBookingStatus() 'use server'
+│       ├── components/
+│       │   ├── BookingsTable.tsx    ← client
+│       │   ├── ReviewsTable.tsx     ← client
+│       │   ├── ServicesTable.tsx    ← client, useOptimistic
+│       │   └── ServiceFormDialog.tsx
+│       ├── actions.ts               ← updateBookingStatus(), CRUD послуг/відгуків 'use server'
+│       └── schema.ts
 │
 ├── lib/
 │   ├── auth/
 │   │   ├── session.ts               ← server-only, Jose JWT
 │   │   ├── cookies.ts               ← server-only, createSession/deleteSession
-│   │   └── dal.ts                   ← server-only, verifySession (React.cache)
+│   │   └── dal.ts                   ← server-only, verifySession(locale) (React.cache)
 │   ├── db/
 │   │   └── prisma.ts                ← singleton PrismaClient (MongoDB)
 │   ├── cache/
 │   │   └── cache-tags.ts
+│   ├── routing/
+│   │   └── routes.ts                ← routes(lang) — всі внутрішні URL тільки звідси
+│   ├── styles/
+│   │   └── sectionBackground.ts     ← overlay sx-пресети для секцій з фоновим фото
 │   └── integrations/
-│       ├── mail.ts                  ← Resend
-│       └── telegram.ts              ← Telegram Bot API через fetch (без SDK)
+│       ├── mail.ts                  ← server-only, Resend
+│       └── telegram.ts              ← server-only, Telegram Bot API через fetch (без SDK)
 │
 ├── i18n/
 │   ├── config.ts                    ← getDictionary(), hasLocale(), Dictionary type
@@ -118,10 +137,11 @@ src/
 │
 ├── config/
 │   ├── locales.ts                   ← locales, defaultLocale, Locale type
+│   ├── fonts.ts                     ← Manrope (next/font, без 'use client')
 │   ├── theme.ts                     ← 'use client', MUI v9 CSS Variables theme + Manrope font
 │   └── maps.ts                      ← MAP_CONFIG (center, zoom)
 │
-├── types/index.ts
+├── types/index.ts                   ← реекспорт Prisma types + ApiResponse
 └── proxy.ts                         ← locale redirect + optimistic auth check
 
 prisma/
@@ -321,14 +341,16 @@ export async function proxy(request: NextRequest) {
   const isAuthRoute  = pathname.includes('/login')
 
   if (isAdminRoute || isAuthRoute) {
+    // Перший сегмент гарантовано є локаллю — перевірено pathnameHasLocale вище
+    const locale  = pathname.split('/')[1]
     const cookie  = request.cookies.get('session')?.value
     const session = await decrypt(cookie)
 
     if (isAdminRoute && !session?.userId) {
-      return NextResponse.redirect(new URL('/uk/login', request.url))
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
     }
     if (isAuthRoute && session?.userId) {
-      return NextResponse.redirect(new URL('/uk/admin', request.url))
+      return NextResponse.redirect(new URL(`/${locale}/admin`, request.url))
     }
   }
 }
@@ -684,15 +706,17 @@ export function ThemeToggle() {
 export interface VerifiedSession {
   isAuth: true
   userId: string
-  role: 'ADMIN' | 'SUPERADMIN'
+  role: Role // з @g/prisma
 }
 
-export const verifySession = cache(async (): Promise<VerifiedSession> => {
-  const cookie  = (await cookies()).get('session')?.value
-  const session = await decrypt(cookie)
-  if (!session?.userId) redirect('/uk/login')
-  return { isAuth: true, userId: session.userId, role: session.role }
-})
+export const verifySession = cache(
+  async (locale: Locale = defaultLocale): Promise<VerifiedSession> => {
+    const cookie  = (await cookies()).get('session')?.value
+    const session = await decrypt(cookie)
+    if (!session?.userId) redirect(routes(locale).login)
+    return { isAuth: true, userId: session.userId, role: session.role }
+  }
+)
 ```
 
 **3. Server Action** — перевірка перед кожною мутацією:
@@ -931,16 +955,17 @@ datasource db {
 
 ```prisma
 model Booking {
-  id        String        @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  phone     String
-  email     String
-  carModel  String
-  year      Int
-  message   String?
-  status    BookingStatus @default(PENDING)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  phone         String
+  email         String
+  carModel      String
+  year          Int
+  preferredDate DateTime?     // optional: старі записи створені до появи поля
+  message       String?
+  status        BookingStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 enum BookingStatus { PENDING CONFIRMED IN_PROGRESS COMPLETED CANCELLED }
@@ -1062,6 +1087,9 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="..."
 - Feature-based код: `src/features/booking/`, `src/features/services/` тощо (не під `components/`)
 - Стилі: тільки MUI `sx` prop або `styled()`, кольори тільки через `theme.palette`
 - `getDictionary` — тільки в RSC, Client Components отримують `dict` через props
+- Внутрішні URL — тільки через `routes(lang)` з `src/lib/routing/routes.ts`, не через template-літерали
+- Server Actions повертають стабільні коди помилок; локалізований текст підставляє клієнт зі словника
+- Ціни зберігаються в UAH; `formatPrice` змінює лише формат числа під локаль, не валюту
 - Не створювати файли-реекспорти/aliases (наприклад, `export { X as Y } from './X'`) — імпортувати напряму з оригінального файлу
 - Git: `feat:` / `fix:` / `style:` / `refactor:` / `chore:`
 
