@@ -1,9 +1,12 @@
 import { Box, Container, Grid, Paper, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
-import prisma from "@/lib/db/prisma";
 import NextLink from "@/components/ui/NextLink";
 import routes from "@/lib/routing/routes";
 import { getDictionary, hasLocale } from "@/i18n/config";
+import { countBookings } from "@/features/booking/queries";
+import { countActiveServices } from "@/features/services/queries";
+import { countHiddenReviews } from "@/features/reviews/queries";
+import { countContacts } from "@/features/contact/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -15,11 +18,11 @@ export default async function AdminPage({ params }: PageProps<"/[lang]/admin">) 
 
   const [bookingsCount, pendingCount, servicesCount, pendingReviewsCount, contactsCount] =
     await Promise.all([
-      prisma.booking.count(),
-      prisma.booking.count({ where: { status: "PENDING" } }),
-      prisma.service.count({ where: { isActive: true } }),
-      prisma.review.count({ where: { isVisible: false } }),
-      prisma.contact.count(),
+      countBookings(),
+      countBookings("PENDING"),
+      countActiveServices(),
+      countHiddenReviews(),
+      countContacts(),
     ]);
 
   const r = routes(lang);

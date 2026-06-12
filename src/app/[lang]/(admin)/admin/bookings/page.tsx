@@ -1,10 +1,10 @@
 import { Box, Chip, Container, Stack, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
-import prisma from "@/lib/db/prisma";
 import NextLink from "@/components/ui/NextLink";
 import routes from "@/lib/routing/routes";
 import { hasLocale } from "@/i18n/config";
 import { BookingsTable } from "@/features/admin/components/BookingsTable";
+import { getBookings } from "@/features/booking/queries";
 import type { BookingStatus } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -23,10 +23,7 @@ export default async function AdminBookingsPage({
     ? (status as BookingStatus)
     : undefined;
 
-  const bookings = await prisma.booking.findMany({
-    where: statusFilter ? { status: statusFilter } : undefined,
-    orderBy: { createdAt: "desc" },
-  });
+  const bookings = await getBookings(statusFilter);
 
   return (
     <Box sx={{ py: 8 }}>

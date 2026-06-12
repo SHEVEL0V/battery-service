@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { Button, Stack, TextField, Typography } from "@mui/material";
 import type { Dictionary, Locale } from "@/i18n/config";
-import { login, type LoginState } from "./actions";
+import { login, type LoginState } from "../actions";
 
 const initialState: LoginState = {};
 

@@ -21,6 +21,13 @@ export const getActiveServices = unstable_cache(
   { tags: [CACHE_TAGS.services], revalidate: 3600 },
 );
 
+// Без кешу — для admin-сторінок (force-dynamic)
+export const getAllServices = () =>
+  prisma.service.findMany({ orderBy: { order: "asc" } });
+
+export const countActiveServices = () =>
+  prisma.service.count({ where: { isActive: true } });
+
 export const getServiceBySlug = unstable_cache(
   async (slug: string, locale: Locale) => {
     const service = await prisma.service.findFirst({

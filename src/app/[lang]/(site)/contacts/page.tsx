@@ -2,7 +2,7 @@ import { Box, Container, Grid, Stack, Typography } from "@mui/material";
 import { notFound } from "next/navigation";
 import { getDictionary, hasLocale } from "@/i18n/config";
 import { ContactInfoCards, MapClient } from "@/features/map/components/MapClient";
-import { ContactForm } from "@/features/contact/ContactForm";
+import { ContactForm } from "@/features/contact/components/ContactForm";
 
 export default async function ContactsPage({ params }: PageProps<"/[lang]/contacts">) {
   const { lang } = await params;

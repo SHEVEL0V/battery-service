@@ -1,8 +1,8 @@
 import { Hero } from "@/features/hero/components/Hero";
-import { Stats } from "@/features/stats/Stats";
+import { Stats } from "@/features/stats/components/Stats";
 import { ServicesList } from "@/features/services/components/ServicesList";
-import { HowItWorks } from "@/features/how-it-works/HowItWorks";
-import { WhyUs } from "@/features/why-us/WhyUs";
+import { HowItWorks } from "@/features/how-it-works/components/HowItWorks";
+import { WhyUs } from "@/features/why-us/components/WhyUs";
 import { ReviewsCarousel } from "@/features/reviews/components/ReviewsCarousel";
 import { BookingCTA } from "@/features/booking/components/BookingCTA";
 import { MapSection } from "@/features/map/components/MapSection";
@@ -21,7 +21,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
   ] = await Promise.all([getDictionary(lang), getActiveServices(lang)]);
 
   return (
-    <main>
+    <>
       <Hero dict={hero} lang={lang} />
       <Stats dict={stats} />
       <ServicesList dict={services} services={activeServices} lang={lang} />
@@ -30,6 +30,6 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
       <ReviewsCarousel dict={reviews} lang={lang} />
       <BookingCTA dict={bookingCTA} lang={lang} />
       <MapSection dict={map} />
-    </main>
+    </>
   );
 }

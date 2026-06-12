@@ -56,7 +56,7 @@ export function AdminHeader({ dict, lang }: { dict: Dictionary["admin"]; lang: L
               textDecoration: "none",
             }}
           >
-            Tesla Battery
+            Battery
           </Box>
 
           {/* Navigation */}

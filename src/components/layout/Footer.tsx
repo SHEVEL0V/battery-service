@@ -10,7 +10,6 @@ export function Footer({ dict }: { dict: Dictionary["footer"] }) {
       sx={{
         py: 4,
         bgcolor: "background.paper",
-        mt: 8,
       }}
     >
       <Container maxWidth="xl">

@@ -43,7 +43,18 @@ export function BookingForm({ dict, errorsDict, lang }: Props) {
   const steps = [dict.step1, dict.step2, dict.step3];
 
   return (
-    <Box component="section" sx={{ py: { xs: 8, md: 12 }, ...adaptiveOverlayVarsSx }}>
+    <Box
+      component="section"
+      sx={{
+        py: { xs: 8, md: 12 },
+        flexGrow: 1,
+        minHeight: 0,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        ...adaptiveOverlayVarsSx,
+      }}
+    >
       <SectionBackgroundImage src="/images/booking.jpg" overlaySx={adaptiveOverlaySx} />
 
       <Container maxWidth="sm" sx={{ position: "relative" }}>

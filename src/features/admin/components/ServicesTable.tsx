@@ -63,7 +63,9 @@ export function ServicesTable({ services, saveErrorText }: ServicesTableProps) {
         }
 
         applyOptimistic({ type: "update", service: { ...saveTarget, ...input } });
-        resolve(withLocalizedError(await updateService(saveTarget.id, input)));
+        const result = await updateService(saveTarget.id, input);
+        if (result.success) router.refresh();
+        resolve(withLocalizedError(result));
       });
     });
   };

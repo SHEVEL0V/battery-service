@@ -1,3 +1,4 @@
+import { Box } from "@mui/material";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { getDictionary, hasLocale } from "@/i18n/config";
@@ -16,10 +17,15 @@ export default async function SiteLayout({ children, params }: LayoutProps<"/[la
   const isAuthenticated = Boolean(session?.userId);
 
   return (
-    <>
+    <Box sx={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
       <Header dict={nav} lang={lang} isAuthenticated={isAuthenticated} />
-      {children}
+      <Box
+        component="main"
+        sx={{ flexGrow: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
+      >
+        {children}
+      </Box>
       <Footer dict={footer} />
-    </>
+    </Box>
   );
 }
