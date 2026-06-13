@@ -2,7 +2,7 @@
 
 Сайт сервісу ремонту батарей Tesla: інформація про послуги, онлайн-запис, контакти з картою та адмін-панель.
 
-**Demo**: https://battery-service-hmzqh1foq-shevel0vs-projects.vercel.app/en
+**Demo**: https://battery-service-beta.vercel.app/uk
 
 **Стек**: Next.js (App Router) · TypeScript · MUI · Prisma · MongoDB · Framer Motion
 
