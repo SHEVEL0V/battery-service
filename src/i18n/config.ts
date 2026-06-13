@@ -13,5 +13,11 @@ const dictionaries: Record<Locale, () => Promise<Dictionary>> = {
 export const hasLocale = (locale: string): locale is Locale =>
   locales.includes(locale as Locale);
 
+// Витягує локаль із прихованого поля форми (Server Actions), фолбек — defaultLocale
+export const localeFromFormData = (formData: FormData, key = "lang"): Locale => {
+  const value = formData.get(key);
+  return typeof value === "string" && hasLocale(value) ? value : defaultLocale;
+};
+
 export const getDictionary = async (locale: Locale): Promise<Dictionary> =>
   dictionaries[locale]();

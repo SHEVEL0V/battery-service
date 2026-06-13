@@ -6,8 +6,14 @@ import { adaptiveOverlaySx, adaptiveOverlayVarsSx } from "@/lib/styles/sectionBa
 import { getVisibleReviews } from "../queries";
 import { AddReviewDialog } from "./AddReviewDialog";
 
-export async function ReviewsCarousel({ dict, lang }: { dict: Dictionary["reviews"]; lang: Locale }) {
-  const reviews = await getVisibleReviews();
+interface Props {
+  dict: Dictionary["reviews"];
+  errorsDict: Dictionary["errors"];
+  lang: Locale;
+}
+
+export async function ReviewsCarousel({ dict, errorsDict, lang }: Props) {
+  const reviews = await getVisibleReviews(lang);
 
   return (
     <Box component="section" sx={{ py: { xs: 8, md: 12 }, ...adaptiveOverlayVarsSx }}>
@@ -57,7 +63,7 @@ export async function ReviewsCarousel({ dict, lang }: { dict: Dictionary["review
                     </Stack>
                     <Rating value={review.rating} readOnly size="small" />
                   </Stack>
-                  <Typography variant="body2">{lang === "uk" ? review.textUk : review.textEn}</Typography>
+                  <Typography variant="body2">{review.text}</Typography>
                 </Paper>
               </ScrollReveal>
             ))}
@@ -65,7 +71,7 @@ export async function ReviewsCarousel({ dict, lang }: { dict: Dictionary["review
         )}
 
         <ScrollReveal direction="up">
-          <AddReviewDialog dict={dict} />
+          <AddReviewDialog dict={dict} errorsDict={errorsDict} />
         </ScrollReveal>
       </Container>
     </Box>

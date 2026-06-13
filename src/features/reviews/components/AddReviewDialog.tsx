@@ -18,12 +18,19 @@ import type { Dictionary } from "@/i18n/config";
 import { submitReview, type ReviewState } from "../actions";
 import { BookingSuccess } from "@/features/booking/components/BookingSuccess";
 
-const initialState: ReviewState = {};
+const initialState: ReviewState = null;
 
-export function AddReviewDialog({ dict }: { dict: Dictionary["reviews"] }) {
+interface Props {
+  dict: Dictionary["reviews"];
+  errorsDict: Dictionary["errors"];
+}
+
+export function AddReviewDialog({ dict, errorsDict }: Props) {
   const [open, setOpen] = useState(false);
   const [state, action, isPending] = useActionState(submitReview, initialState);
   const [rating, setRating] = useState<number | null>(5);
+  const fieldErrors = state && !state.ok ? state.fieldErrors : undefined;
+  const showServerError = state && !state.ok && state.code !== "validation";
 
   return (
     <Box sx={{ textAlign: "center" }}>
@@ -43,7 +50,7 @@ export function AddReviewDialog({ dict }: { dict: Dictionary["reviews"] }) {
         </DialogTitle>
 
         <DialogContent>
-          {state.success ? (
+          {state?.ok ? (
             <BookingSuccess dict={{ success: dict.form.success }} />
           ) : (
             <form action={action}>
@@ -51,8 +58,8 @@ export function AddReviewDialog({ dict }: { dict: Dictionary["reviews"] }) {
                 <TextField
                   name="author"
                   label={dict.form.author}
-                  error={!!state.errors?.author}
-                  helperText={state.errors?.author?.[0]}
+                  error={!!fieldErrors?.author}
+                  helperText={fieldErrors?.author?.[0]}
                   fullWidth
                   required
                 />
@@ -60,8 +67,8 @@ export function AddReviewDialog({ dict }: { dict: Dictionary["reviews"] }) {
                 <TextField
                   name="carModel"
                   label={dict.form.carModel}
-                  error={!!state.errors?.carModel}
-                  helperText={state.errors?.carModel?.[0]}
+                  error={!!fieldErrors?.carModel}
+                  helperText={fieldErrors?.carModel?.[0]}
                   fullWidth
                   required
                 />
@@ -78,11 +85,17 @@ export function AddReviewDialog({ dict }: { dict: Dictionary["reviews"] }) {
                   label={dict.form.text}
                   multiline
                   minRows={3}
-                  error={!!state.errors?.text}
-                  helperText={state.errors?.text?.[0]}
+                  error={!!fieldErrors?.text}
+                  helperText={fieldErrors?.text?.[0]}
                   fullWidth
                   required
                 />
+
+                {showServerError && (
+                  <Typography color="error" variant="body2">
+                    {errorsDict.serverError}
+                  </Typography>
+                )}
 
                 <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
                   <Button type="submit" variant="contained" size="large" disabled={isPending}>

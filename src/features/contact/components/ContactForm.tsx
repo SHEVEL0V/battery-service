@@ -6,19 +6,23 @@ import type { Dictionary, Locale } from "@/i18n/config";
 import { submitContact, type ContactState } from "../actions";
 import { BookingSuccess } from "@/features/booking/components/BookingSuccess";
 
-const initialState: ContactState = {};
+const initialState: ContactState = null;
 
 interface Props {
   dict: Dictionary["contacts"]["form"];
+  errorsDict: Dictionary["errors"];
   lang: Locale;
 }
 
-export function ContactForm({ dict, lang }: Props) {
+export function ContactForm({ dict, errorsDict, lang }: Props) {
   const [state, action, isPending] = useActionState(submitContact, initialState);
 
-  if (state.success) {
+  if (state?.ok) {
     return <BookingSuccess dict={{ success: dict.success }} />;
   }
+
+  const fieldErrors = state && !state.ok ? state.fieldErrors : undefined;
+  const showServerError = state && !state.ok && state.code !== "validation";
 
   return (
     <Paper sx={{ p: { xs: 3, md: 5 } }}>
@@ -28,8 +32,8 @@ export function ContactForm({ dict, lang }: Props) {
           <TextField
             name="name"
             label={dict.name}
-            error={!!state.errors?.name}
-            helperText={state.errors?.name?.[0]}
+            error={!!fieldErrors?.name}
+            helperText={fieldErrors?.name?.[0]}
             fullWidth
             required
           />
@@ -37,8 +41,8 @@ export function ContactForm({ dict, lang }: Props) {
           <TextField
             name="phone"
             label={dict.phone}
-            error={!!state.errors?.phone}
-            helperText={state.errors?.phone?.[0]}
+            error={!!fieldErrors?.phone}
+            helperText={fieldErrors?.phone?.[0]}
             fullWidth
             required
           />
@@ -47,8 +51,8 @@ export function ContactForm({ dict, lang }: Props) {
             name="email"
             type="email"
             label={dict.email}
-            error={!!state.errors?.email}
-            helperText={state.errors?.email?.[0]}
+            error={!!fieldErrors?.email}
+            helperText={fieldErrors?.email?.[0]}
             fullWidth
           />
 
@@ -57,15 +61,15 @@ export function ContactForm({ dict, lang }: Props) {
             label={dict.message}
             multiline
             minRows={3}
-            error={!!state.errors?.message}
-            helperText={state.errors?.message?.[0]}
+            error={!!fieldErrors?.message}
+            helperText={fieldErrors?.message?.[0]}
             fullWidth
             required
           />
 
-          {state.error && (
+          {showServerError && (
             <Typography color="error" variant="body2">
-              {state.error}
+              {errorsDict.serverError}
             </Typography>
           )}
 

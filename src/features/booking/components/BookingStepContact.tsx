@@ -1,15 +1,17 @@
 import { Box, Button, Stack, TextField, Typography } from "@mui/material";
 import type { Dictionary } from "@/i18n/config";
-import type { BookingState } from "../actions";
+import type { FieldErrors } from "@/lib/actions/types";
+import type { BookingInput } from "../schema";
 
 interface Props {
   dict: Dictionary["booking"];
-  state: BookingState;
+  fieldErrors?: FieldErrors<BookingInput>;
+  errorMessage?: string;
   isPending: boolean;
   onPrev: () => void;
 }
 
-export function BookingStepContact({ dict, state, isPending, onPrev }: Props) {
+export function BookingStepContact({ dict, fieldErrors, errorMessage, isPending, onPrev }: Props) {
   return (
     <Stack spacing={3}>
       <Typography variant="h4">{dict.step3}</Typography>
@@ -17,8 +19,8 @@ export function BookingStepContact({ dict, state, isPending, onPrev }: Props) {
       <TextField
         name="name"
         label={dict.name}
-        error={!!state.errors?.name}
-        helperText={state.errors?.name?.[0]}
+        error={!!fieldErrors?.name}
+        helperText={fieldErrors?.name?.[0]}
         fullWidth
         required
       />
@@ -26,8 +28,8 @@ export function BookingStepContact({ dict, state, isPending, onPrev }: Props) {
       <TextField
         name="phone"
         label={dict.phone}
-        error={!!state.errors?.phone}
-        helperText={state.errors?.phone?.[0]}
+        error={!!fieldErrors?.phone}
+        helperText={fieldErrors?.phone?.[0]}
         fullWidth
         required
       />
@@ -36,8 +38,8 @@ export function BookingStepContact({ dict, state, isPending, onPrev }: Props) {
         name="email"
         type="email"
         label={dict.email}
-        error={!!state.errors?.email}
-        helperText={state.errors?.email?.[0]}
+        error={!!fieldErrors?.email}
+        helperText={fieldErrors?.email?.[0]}
         fullWidth
         required
       />
@@ -47,14 +49,14 @@ export function BookingStepContact({ dict, state, isPending, onPrev }: Props) {
         label={dict.message}
         multiline
         minRows={3}
-        error={!!state.errors?.message}
-        helperText={state.errors?.message?.[0]}
+        error={!!fieldErrors?.message}
+        helperText={fieldErrors?.message?.[0]}
         fullWidth
       />
 
-      {state.error && (
+      {errorMessage && (
         <Typography color="error" variant="body2">
-          {state.error}
+          {errorMessage}
         </Typography>
       )}
 

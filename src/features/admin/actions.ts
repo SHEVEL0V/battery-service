@@ -1,84 +1,40 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
 import prisma from "@/lib/db/prisma";
-import { verifySession } from "@/lib/auth/dal";
 import { CACHE_TAGS } from "@/lib/cache/cache-tags";
+import { mutate, mutateWith } from "@/lib/actions/mutate";
+import type { ActionResult } from "@/lib/actions/types";
 import type { BookingStatus } from "@/types";
 import { serviceSchema, type ServiceInput } from "./schema";
 
-export async function updateBookingStatus(id: string, status: BookingStatus) {
-  await verifySession();
-
-  await prisma.booking.update({
-    where: { id },
-    data: { status },
-  });
-
-  revalidateTag(CACHE_TAGS.bookings, "default");
+export async function updateBookingStatus(id: string, status: BookingStatus): Promise<ActionResult> {
+  return mutate(() => prisma.booking.update({ where: { id }, data: { status } }), [CACHE_TAGS.bookings]);
 }
 
-export async function toggleReviewVisibility(id: string, isVisible: boolean) {
-  await verifySession();
-
-  await prisma.review.update({
-    where: { id },
-    data: { isVisible },
-  });
-
-  revalidateTag(CACHE_TAGS.reviews, "default");
+export async function toggleReviewVisibility(id: string, isVisible: boolean): Promise<ActionResult> {
+  return mutate(() => prisma.review.update({ where: { id }, data: { isVisible } }), [CACHE_TAGS.reviews]);
 }
 
-export async function deleteReview(id: string) {
-  await verifySession();
-
-  await prisma.review.delete({ where: { id } });
-
-  revalidateTag(CACHE_TAGS.reviews, "default");
+export async function deleteReview(id: string): Promise<ActionResult> {
+  return mutate(() => prisma.review.delete({ where: { id } }), [CACHE_TAGS.reviews]);
 }
 
-export interface UpdateServiceState {
-  success?: boolean;
-  // Стабільний код помилки — локалізований текст підставляє клієнт зі словника
-  error?: "saveFailed";
-  errors?: Partial<Record<keyof ServiceInput, string[]>>;
-}
+export type UpdateServiceState = ActionResult<ServiceInput>;
 
 export async function createService(input: ServiceInput): Promise<UpdateServiceState> {
-  await verifySession();
-
-  const validated = serviceSchema.safeParse(input);
-  if (!validated.success) {
-    return { errors: validated.error.flatten().fieldErrors };
-  }
-
-  try {
-    await prisma.service.create({ data: validated.data });
-  } catch {
-    return { error: "saveFailed" };
-  }
-
-  revalidateTag(CACHE_TAGS.services, "default");
-  return { success: true };
+  return mutateWith(
+    serviceSchema,
+    input,
+    (data) => prisma.service.create({ data }),
+    [CACHE_TAGS.services],
+  );
 }
 
 export async function updateService(id: string, input: ServiceInput): Promise<UpdateServiceState> {
-  await verifySession();
-
-  const validated = serviceSchema.safeParse(input);
-  if (!validated.success) {
-    return { errors: validated.error.flatten().fieldErrors };
-  }
-
-  try {
-    await prisma.service.update({
-      where: { id },
-      data: validated.data,
-    });
-  } catch {
-    return { error: "saveFailed" };
-  }
-
-  revalidateTag(CACHE_TAGS.services, "default");
-  return { success: true };
+  return mutateWith(
+    serviceSchema,
+    input,
+    (data) => prisma.service.update({ where: { id }, data }),
+    [CACHE_TAGS.services],
+  );
 }

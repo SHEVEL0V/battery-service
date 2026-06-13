@@ -8,7 +8,7 @@ export default async function ContactsPage({ params }: PageProps<"/[lang]/contac
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
 
-  const { contacts, map } = await getDictionary(lang);
+  const { contacts, map, errors } = await getDictionary(lang);
 
   return (
     <Box component="section" sx={{ py: { xs: 8, md: 12 } }}>
@@ -23,7 +23,7 @@ export default async function ContactsPage({ params }: PageProps<"/[lang]/contac
 
           <Grid container spacing={4} sx={{ alignItems: "stretch" }}>
             <Grid size={{ xs: 12, md: 6 }}>
-              <ContactForm dict={contacts.form} lang={lang} />
+              <ContactForm dict={contacts.form} errorsDict={errors} lang={lang} />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }} sx={{ display: "flex" }}>
               <MapClient dict={map} />

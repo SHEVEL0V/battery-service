@@ -16,7 +16,7 @@ import {
   Typography,
 } from "@mui/material";
 import type { Service } from "@/types";
-import { createService, updateService, type UpdateServiceState } from "../actions";
+import { createService, updateService } from "../actions";
 import {
   ServiceFormDialog,
   type ServiceFormResult,
@@ -47,25 +47,21 @@ export function ServicesTable({ services, saveErrorText }: ServicesTableProps) {
     },
   );
 
-  // Server Action повертає стабільний код помилки — текст підставляємо зі словника
-  const withLocalizedError = (result: UpdateServiceState): ServiceFormResult =>
-    result.error ? { ...result, error: saveErrorText } : result;
-
   const handleSave = (saveTarget: Service | "new", input: ServiceInput): Promise<ServiceFormResult> => {
     return new Promise((resolve) => {
       startTransition(async () => {
         if (saveTarget === "new") {
           applyOptimistic({ type: "create", service: { id: `optimistic-${Date.now()}`, ...input } });
           const result = await createService(input);
-          if (result.success) router.refresh();
-          resolve(withLocalizedError(result));
+          if (result.ok) router.refresh();
+          resolve(result);
           return;
         }
 
         applyOptimistic({ type: "update", service: { ...saveTarget, ...input } });
         const result = await updateService(saveTarget.id, input);
-        if (result.success) router.refresh();
-        resolve(withLocalizedError(result));
+        if (result.ok) router.refresh();
+        resolve(result);
       });
     });
   };
@@ -123,7 +119,12 @@ export function ServicesTable({ services, saveErrorText }: ServicesTableProps) {
         </TableContainer>
       )}
 
-      <ServiceFormDialog target={target} onClose={() => setTarget(null)} onSave={handleSave} />
+      <ServiceFormDialog
+        target={target}
+        errorText={saveErrorText}
+        onClose={() => setTarget(null)}
+        onSave={handleSave}
+      />
     </>
   );
 }
