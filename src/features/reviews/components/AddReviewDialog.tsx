@@ -16,7 +16,7 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import type { Dictionary } from "@/i18n/config";
 import { submitReview, type ReviewState } from "../actions";
-import { BookingSuccess } from "@/features/booking/components/BookingSuccess";
+import { SuccessState } from "@/components/ui/SuccessState";
 
 const initialState: ReviewState = null;
 
@@ -51,7 +51,7 @@ export function AddReviewDialog({ dict, errorsDict }: Props) {
 
         <DialogContent>
           {state?.ok ? (
-            <BookingSuccess dict={{ success: dict.form.success }} />
+            <SuccessState message={dict.form.success} />
           ) : (
             <form action={action}>
               <Stack spacing={3} sx={{ pt: 1 }}>

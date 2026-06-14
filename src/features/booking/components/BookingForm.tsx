@@ -6,12 +6,12 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { Dictionary, Locale } from "@/i18n/config";
 import { ScrollReveal } from "@/components/animation/ScrollReveal";
 import { SectionBackgroundImage } from "@/components/ui/SectionBackgroundImage";
+import { SuccessState } from "@/components/ui/SuccessState";
 import { adaptiveOverlaySx, adaptiveOverlayVarsSx } from "@/lib/styles/sectionBackground";
 import { createBooking, type BookingState } from "../actions";
 import { BookingStepCar } from "./BookingStepCar";
 import { BookingStepDate } from "./BookingStepDate";
 import { BookingStepContact } from "./BookingStepContact";
-import { BookingSuccess } from "./BookingSuccess";
 import type { BookingDraft, BookingStep } from "../types";
 
 const initialState: BookingState = null;
@@ -82,7 +82,7 @@ export function BookingForm({ dict, errorsDict, lang }: Props) {
                 transition={{ duration: 0.35, ease: "easeInOut" }}
               >
                 {isSuccess ? (
-                  <BookingSuccess dict={dict} />
+                  <SuccessState message={dict.success} />
                 ) : step === 1 ? (
                   <BookingStepCar
                     dict={dict}

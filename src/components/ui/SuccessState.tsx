@@ -10,7 +10,7 @@ const SPARKS = [
   { x: 30, y: 30, delay: 0.85 },
 ];
 
-export function BookingSuccess({ dict }: { dict: { success: string } }) {
+export function SuccessState({ message }: { message: string }) {
   const prefersReducedMotion = useReducedMotion();
 
   return (
@@ -75,7 +75,7 @@ export function BookingSuccess({ dict }: { dict: { success: string } }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.4 }}
       >
-        <Typography variant="h4">{dict.success}</Typography>
+        <Typography variant="h4">{message}</Typography>
       </motion.div>
     </Stack>
   );

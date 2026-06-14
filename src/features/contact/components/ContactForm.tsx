@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { Box, Button, Paper, Stack, TextField, Typography } from "@mui/material";
 import type { Dictionary, Locale } from "@/i18n/config";
 import { submitContact, type ContactState } from "../actions";
-import { BookingSuccess } from "@/features/booking/components/BookingSuccess";
+import { SuccessState } from "@/components/ui/SuccessState";
 
 const initialState: ContactState = null;
 
@@ -18,7 +18,7 @@ export function ContactForm({ dict, errorsDict, lang }: Props) {
   const [state, action, isPending] = useActionState(submitContact, initialState);
 
   if (state?.ok) {
-    return <BookingSuccess dict={{ success: dict.success }} />;
+    return <SuccessState message={dict.success} />;
   }
 
   const fieldErrors = state && !state.ok ? state.fieldErrors : undefined;

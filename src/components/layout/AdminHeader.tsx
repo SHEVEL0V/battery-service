@@ -1,6 +1,6 @@
 "use client";
 import { Box, Button, Container, Stack } from "@mui/material";
-import Link from "next/link";
+import NextLink from "@/components/ui/NextLink";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import LocaleSwitcher from "@/components/ui/LocaleSwitcher";
@@ -44,7 +44,7 @@ export function AdminHeader({ dict, lang }: { dict: Dictionary["admin"]; lang: L
         >
           {/* Logo / Name */}
           <Box
-            component={Link}
+            component={NextLink}
             href={r.admin}
             sx={{
               fontFamily: "var(--font-manrope), system-ui, sans-serif",
@@ -65,7 +65,7 @@ export function AdminHeader({ dict, lang }: { dict: Dictionary["admin"]; lang: L
               {links.map(({ href, label }) => (
                 <Button
                   key={href}
-                  component={Link}
+                  component={NextLink}
                   href={href}
                   color={pathname === href ? "primary" : "inherit"}
                   size="small"
@@ -85,7 +85,7 @@ export function AdminHeader({ dict, lang }: { dict: Dictionary["admin"]; lang: L
                 pl: 2,
               }}
             >
-              <Button component={Link} href={r.home} color="inherit" size="small">
+              <Button component={NextLink} href={r.home} color="inherit" size="small">
                 {dict.viewSite}
               </Button>
               <ThemeToggle />
