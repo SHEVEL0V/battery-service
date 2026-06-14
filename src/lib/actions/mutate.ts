@@ -1,49 +1,35 @@
 import "server-only";
 import type { z } from "zod";
-import { verifySession } from "@/lib/auth/dal";
 import type { CacheTag } from "@/lib/cache/cache-tags";
-import { revalidateTags } from "./revalidate";
-import { ACTION_ERROR, fail, ok, type ActionResult } from "./types";
+import { runAction, zodParse } from "./runAction";
+import type { ActionResult } from "./types";
 
-// Для імперативних admin-мутацій без форми: auth + try/catch + стабільний код помилки
-export async function mutate(
-  fn: () => Promise<unknown>,
-  revalidate?: CacheTag[],
-): Promise<ActionResult> {
-  await verifySession();
-
-  try {
-    await fn();
-  } catch (error) {
-    console.error("[mutate]", error);
-    return fail(ACTION_ERROR.serverError);
-  }
-
-  revalidateTags(revalidate);
-  return ok();
+// Імперативна admin-мутація без форми: auth завжди, без валідації вводу
+export function mutate(fn: () => Promise<unknown>, revalidate?: CacheTag[]): Promise<ActionResult> {
+  return runAction({
+    requireAuth: true,
+    handler: async () => {
+      await fn();
+    },
+    revalidate,
+    logLabel: "[mutate]",
+  });
 }
 
-// Як mutate, але з типізованим input: auth + Zod-валідація + try/catch + інвалідація
-export async function mutateWith<S extends z.ZodType>(
+// Як mutate, але з типізованим input + Zod-валідацією (повертає fieldErrors при невдачі)
+export function mutateWith<S extends z.ZodType>(
   schema: S,
   input: unknown,
   fn: (data: z.infer<S>) => Promise<unknown>,
   revalidate?: CacheTag[],
 ): Promise<ActionResult<z.infer<S>>> {
-  await verifySession();
-
-  const validated = schema.safeParse(input);
-  if (!validated.success) {
-    return fail(ACTION_ERROR.validation, validated.error.flatten().fieldErrors);
-  }
-
-  try {
-    await fn(validated.data);
-  } catch (error) {
-    console.error("[mutateWith]", error);
-    return fail(ACTION_ERROR.serverError);
-  }
-
-  revalidateTags(revalidate);
-  return ok();
+  return runAction({
+    requireAuth: true,
+    parse: () => zodParse(schema, input),
+    handler: async (data) => {
+      await fn(data);
+    },
+    revalidate,
+    logLabel: "[mutateWith]",
+  });
 }

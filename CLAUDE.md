@@ -121,9 +121,9 @@ src/
 ├── lib/
 │   ├── actions/                     ← уніфікований шар Server Actions (server-only)
 │   │   ├── types.ts                 ← ActionResult<T>, ok()/fail(), ACTION_ERROR коди, FieldErrors<T>
-│   │   ├── formAction.ts            ← фабрика form-екшенів (auth → Zod → handler → revalidate → код помилки)
-│   │   ├── mutate.ts                ← mutate() (імперативні admin-мутації) + mutateWith() (з Zod-валідацією)
-│   │   └── revalidate.ts            ← revalidateTags(tags) — централізована інвалідація кешу
+│   │   ├── runAction.ts             ← ядро пайплайну (auth → Zod → handler → revalidate → код помилки) + zodParse + інвалідація кешу
+│   │   ├── formAction.ts            ← фабрика form-екшенів поверх runAction
+│   │   └── mutate.ts                ← mutate() (імперативні admin-мутації) + mutateWith() (з Zod-валідацією) поверх runAction
 │   ├── auth/
 │   │   ├── session.ts               ← server-only, Jose JWT
 │   │   ├── cookies.ts               ← server-only, createSession/deleteSession
@@ -908,7 +908,7 @@ export type CacheTag = (typeof CACHE_TAGS)[keyof typeof CACHE_TAGS]
 Admin сторінки: `export const dynamic = 'force-dynamic'`
 
 > Інвалідація кешу — **не** прямим `revalidateTag`, а декларативно через `revalidate: [CACHE_TAGS.x]`
-> у `formAction`/`mutate`/`mutateWith` (виклик централізовано у `lib/actions/revalidate.ts`).
+> у `formAction`/`mutate`/`mutateWith` (виклик централізовано у `lib/actions/runAction.ts`).
 
 ---
 
