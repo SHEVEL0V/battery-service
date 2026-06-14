@@ -1,20 +1,9 @@
 "use client";
 
-import { useOptimistic, useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Button,
-  Chip,
-  Paper,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from "@mui/material";
+import { Button, Chip, Stack } from "@mui/material";
+import { DataTable, type Column } from "@/components/ui/DataTable";
 import type { Service } from "@/types";
 import { createService, updateService } from "../actions";
 import {
@@ -24,10 +13,6 @@ import {
 } from "./ServiceFormDialog";
 import type { ServiceInput } from "../schema";
 
-type OptimisticAction =
-  | { type: "create"; service: Service }
-  | { type: "update"; service: Service };
-
 interface ServicesTableProps {
   services: Service[];
   saveErrorText: string;
@@ -36,35 +21,40 @@ interface ServicesTableProps {
 export function ServicesTable({ services, saveErrorText }: ServicesTableProps) {
   const router = useRouter();
   const [target, setTarget] = useState<ServiceFormTarget>(null);
-  const [, startTransition] = useTransition();
-  const [optimisticServices, applyOptimistic] = useOptimistic(
-    services,
-    (state, action: OptimisticAction) => {
-      if (action.type === "update") {
-        return state.map((s) => (s.id === action.service.id ? action.service : s));
-      }
-      return [...state, action.service];
-    },
-  );
 
-  const handleSave = (saveTarget: Service | "new", input: ServiceInput): Promise<ServiceFormResult> => {
-    return new Promise((resolve) => {
-      startTransition(async () => {
-        if (saveTarget === "new") {
-          applyOptimistic({ type: "create", service: { id: `optimistic-${Date.now()}`, ...input } });
-          const result = await createService(input);
-          if (result.ok) router.refresh();
-          resolve(result);
-          return;
-        }
+  const handleSave = async (saveTarget: Service | "new", input: ServiceInput): Promise<ServiceFormResult> => {
+    const result =
+      saveTarget === "new" ? await createService(input) : await updateService(saveTarget.id, input);
 
-        applyOptimistic({ type: "update", service: { ...saveTarget, ...input } });
-        const result = await updateService(saveTarget.id, input);
-        if (result.ok) router.refresh();
-        resolve(result);
-      });
-    });
+    if (result.ok) router.refresh();
+    return result;
   };
+
+  const columns: Column<Service>[] = [
+    { header: "Order", render: (service) => service.order },
+    { header: "Title (UK)", render: (service) => service.titleUk },
+    { header: "Title (EN)", render: (service) => service.titleEn },
+    { header: "Slug", render: (service) => service.slug },
+    { header: "Price", render: (service) => `${service.price} ₴` },
+    { header: "Duration", render: (service) => service.duration },
+    {
+      header: "Status",
+      render: (service) => (
+        <Chip
+          label={service.isActive ? "Active" : "Inactive"}
+          color={service.isActive ? "success" : "default"}
+          size="small"
+        />
+      ),
+    },
+    {
+      render: (service) => (
+        <Button size="small" onClick={() => setTarget(service)}>
+          Edit
+        </Button>
+      ),
+    },
+  ];
 
   return (
     <>
@@ -74,50 +64,7 @@ export function ServicesTable({ services, saveErrorText }: ServicesTableProps) {
         </Button>
       </Stack>
 
-      {optimisticServices.length === 0 ? (
-        <Typography color="text.secondary">No services yet.</Typography>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Order</TableCell>
-                <TableCell>Title (UK)</TableCell>
-                <TableCell>Title (EN)</TableCell>
-                <TableCell>Slug</TableCell>
-                <TableCell>Price</TableCell>
-                <TableCell>Duration</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell />
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {optimisticServices.map((service) => (
-                <TableRow key={service.id}>
-                  <TableCell>{service.order}</TableCell>
-                  <TableCell>{service.titleUk}</TableCell>
-                  <TableCell>{service.titleEn}</TableCell>
-                  <TableCell>{service.slug}</TableCell>
-                  <TableCell>{service.price} ₴</TableCell>
-                  <TableCell>{service.duration}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={service.isActive ? "Active" : "Inactive"}
-                      color={service.isActive ? "success" : "default"}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Button size="small" onClick={() => setTarget(service)}>
-                      Edit
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+      <DataTable rows={services} columns={columns} empty="No services yet." />
 
       <ServiceFormDialog
         target={target}

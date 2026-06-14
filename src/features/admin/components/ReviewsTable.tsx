@@ -1,111 +1,62 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import {
-  Button,
-  Chip,
-  Paper,
-  Rating,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from "@mui/material";
+import { Button, Chip, Rating, Stack, Typography } from "@mui/material";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { formatDate } from "@/lib/format/date";
+import { useRowAction } from "@/lib/hooks/useRowAction";
 import type { Review } from "@/types";
 import { deleteReview, toggleReviewVisibility } from "../actions";
 
 export function ReviewsTable({ reviews }: { reviews: Review[] }) {
-  const router = useRouter();
-  const [pendingId, setPendingId] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const { pendingId, isPending, run } = useRowAction();
 
-  const handleToggle = (id: string, isVisible: boolean) => {
-    setPendingId(id);
-    startTransition(async () => {
-      await toggleReviewVisibility(id, isVisible);
-      setPendingId(null);
-      router.refresh();
-    });
-  };
+  const columns: Column<Review>[] = [
+    { header: "Author", render: (review) => review.author },
+    { header: "Car", render: (review) => review.carModel },
+    { header: "Rating", render: (review) => <Rating value={review.rating} readOnly size="small" /> },
+    {
+      header: "Review",
+      sx: { maxWidth: 320 },
+      render: (review) => <Typography variant="body2">{review.textUk}</Typography>,
+    },
+    { header: "Created", render: (review) => formatDate(review.createdAt) },
+    {
+      header: "Status",
+      render: (review) => (
+        <Chip
+          label={review.isVisible ? "Visible" : "Hidden"}
+          color={review.isVisible ? "success" : "default"}
+          size="small"
+        />
+      ),
+    },
+    {
+      header: "Actions",
+      align: "right",
+      render: (review) => {
+        const rowPending = isPending && pendingId === review.id;
+        return (
+          <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end" }}>
+            <Button
+              size="small"
+              disabled={rowPending}
+              onClick={() => run(review.id, () => toggleReviewVisibility(review.id, !review.isVisible))}
+            >
+              {review.isVisible ? "Hide" : "Show"}
+            </Button>
+            <Button
+              size="small"
+              color="error"
+              disabled={rowPending}
+              onClick={() => run(review.id, () => deleteReview(review.id))}
+            >
+              Delete
+            </Button>
+          </Stack>
+        );
+      },
+    },
+  ];
 
-  const handleDelete = (id: string) => {
-    setPendingId(id);
-    startTransition(async () => {
-      await deleteReview(id);
-      setPendingId(null);
-      router.refresh();
-    });
-  };
-
-  if (reviews.length === 0) {
-    return <Typography color="text.secondary">No reviews yet.</Typography>;
-  }
-
-  return (
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Author</TableCell>
-            <TableCell>Car</TableCell>
-            <TableCell>Rating</TableCell>
-            <TableCell>Review</TableCell>
-            <TableCell>Created</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell align="right">Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {reviews.map((review) => {
-            const rowPending = isPending && pendingId === review.id;
-
-            return (
-              <TableRow key={review.id}>
-                <TableCell>{review.author}</TableCell>
-                <TableCell>{review.carModel}</TableCell>
-                <TableCell>
-                  <Rating value={review.rating} readOnly size="small" />
-                </TableCell>
-                <TableCell sx={{ maxWidth: 320 }}>
-                  <Typography variant="body2">{review.textUk}</Typography>
-                </TableCell>
-                <TableCell>{new Date(review.createdAt).toLocaleDateString("en-GB")}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={review.isVisible ? "Visible" : "Hidden"}
-                    color={review.isVisible ? "success" : "default"}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end" }}>
-                    <Button
-                      size="small"
-                      disabled={rowPending}
-                      onClick={() => handleToggle(review.id, !review.isVisible)}
-                    >
-                      {review.isVisible ? "Hide" : "Show"}
-                    </Button>
-                    <Button
-                      size="small"
-                      color="error"
-                      disabled={rowPending}
-                      onClick={() => handleDelete(review.id)}
-                    >
-                      Delete
-                    </Button>
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  );
+  return <DataTable rows={reviews} columns={columns} empty="No reviews yet." />;
 }
