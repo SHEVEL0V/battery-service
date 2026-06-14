@@ -5,5 +5,4 @@ export type {
   Review,
   Role,
   Service,
-  User,
 } from "@g/prisma";

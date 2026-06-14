@@ -19,9 +19,7 @@ export async function deleteReview(id: string): Promise<ActionResult> {
   return mutate(() => prisma.review.delete({ where: { id } }), [CACHE_TAGS.reviews]);
 }
 
-export type UpdateServiceState = ActionResult<ServiceInput>;
-
-export async function createService(input: ServiceInput): Promise<UpdateServiceState> {
+export async function createService(input: ServiceInput): Promise<ActionResult<ServiceInput>> {
   return mutateWith(
     serviceSchema,
     input,
@@ -30,7 +28,7 @@ export async function createService(input: ServiceInput): Promise<UpdateServiceS
   );
 }
 
-export async function updateService(id: string, input: ServiceInput): Promise<UpdateServiceState> {
+export async function updateService(id: string, input: ServiceInput): Promise<ActionResult<ServiceInput>> {
   return mutateWith(
     serviceSchema,
     input,

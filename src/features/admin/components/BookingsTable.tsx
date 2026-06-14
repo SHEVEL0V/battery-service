@@ -76,10 +76,10 @@ export function BookingsTable({ bookings }: { bookings: Booking[] }) {
               </TableCell>
               <TableCell>
                 {booking.preferredDate
-                  ? new Date(booking.preferredDate).toLocaleDateString()
+                  ? new Date(booking.preferredDate).toLocaleDateString("en-GB")
                   : "—"}
               </TableCell>
-              <TableCell>{new Date(booking.createdAt).toLocaleDateString()}</TableCell>
+              <TableCell>{new Date(booking.createdAt).toLocaleDateString("en-GB")}</TableCell>
               <TableCell>
                 <Select<BookingStatus>
                   value={booking.status}

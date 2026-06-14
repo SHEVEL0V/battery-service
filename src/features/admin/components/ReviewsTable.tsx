@@ -74,7 +74,7 @@ export function ReviewsTable({ reviews }: { reviews: Review[] }) {
                 <TableCell sx={{ maxWidth: 320 }}>
                   <Typography variant="body2">{review.textUk}</Typography>
                 </TableCell>
-                <TableCell>{new Date(review.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell>{new Date(review.createdAt).toLocaleDateString("en-GB")}</TableCell>
                 <TableCell>
                   <Chip
                     label={review.isVisible ? "Visible" : "Hidden"}
