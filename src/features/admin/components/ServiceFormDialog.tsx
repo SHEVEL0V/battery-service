@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { FormControlLabel, Grid, Switch, TextField } from "@mui/material";
-import { MutationDialog, type MutationResult } from "@/components/ui/MutationDialog";
+import { MutationDialog } from "@/components/ui/MutationDialog";
+import type { ActionResult, FieldErrors } from "@/lib/actions/types";
 import type { Service } from "@/types";
 import type { ServiceInput } from "../schema";
 
-export interface ServiceFormResult extends MutationResult {
-  errors?: Partial<Record<keyof ServiceInput, string[]>>;
-}
+export type ServiceFormResult = ActionResult<ServiceInput>;
 
 const EMPTY_FORM: ServiceInput = {
   slug: "",
@@ -64,14 +63,15 @@ function formStateFor(target: ServiceFormTarget): ServiceInput | null {
 
 interface ServiceFormDialogProps {
   target: ServiceFormTarget;
+  errorText: string;
   onClose: () => void;
   onSave: (target: Service | "new", input: ServiceInput) => Promise<ServiceFormResult>;
 }
 
-export function ServiceFormDialog({ target, onClose, onSave }: ServiceFormDialogProps) {
+export function ServiceFormDialog({ target, errorText, onClose, onSave }: ServiceFormDialogProps) {
   const [prevTarget, setPrevTarget] = useState(target);
   const [form, setForm] = useState<ServiceInput | null>(formStateFor(target));
-  const [errors, setErrors] = useState<Partial<Record<keyof ServiceInput, string[]>>>({});
+  const [errors, setErrors] = useState<FieldErrors<ServiceInput>>({});
 
   if (target !== prevTarget) {
     setPrevTarget(target);
@@ -89,7 +89,8 @@ export function ServiceFormDialog({ target, onClose, onSave }: ServiceFormDialog
       title={target === "new" ? "Add service" : "Edit service"}
       onClose={onClose}
       onSubmit={() => onSave(target!, form!)}
-      onResult={(result) => setErrors(result.errors ?? {})}
+      onResult={(result) => setErrors(!result.ok ? result.fieldErrors ?? {} : {})}
+      errorText={errorText}
       disableSubmit={!target || !form}
     >
       {form && (

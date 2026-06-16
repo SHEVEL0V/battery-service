@@ -1,9 +1,3 @@
-export interface ApiResponse<T = unknown> {
-  success: boolean
-  data?: T
-  error?: string
-}
-
 export type {
   Booking,
   BookingStatus,
@@ -11,5 +5,4 @@ export type {
   Review,
   Role,
   Service,
-  User,
 } from "@g/prisma";

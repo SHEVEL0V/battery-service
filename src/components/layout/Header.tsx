@@ -3,11 +3,38 @@ import { useState } from "react";
 import { Box, Button, Container, Divider, Drawer, IconButton, Stack } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
-import Link from "next/link";
+import NextLink from "@/components/ui/NextLink";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import type { Dictionary, Locale } from "@/i18n/config";
 import routes from "@/lib/routing/routes";
 import LocaleSwitcher from "@/components/ui/LocaleSwitcher";
+
+function NavLinks({
+  links,
+  size,
+  onLinkClick,
+}: {
+  links: { href: string; label: string }[];
+  size: "small" | "large";
+  onLinkClick?: () => void;
+}) {
+  return (
+    <>
+      {links.map((link) => (
+        <Button
+          key={link.href}
+          component={NextLink}
+          href={link.href}
+          color="inherit"
+          size={size}
+          onClick={onLinkClick}
+        >
+          {link.label}
+        </Button>
+      ))}
+    </>
+  );
+}
 
 export function Header({
   dict,
@@ -53,7 +80,7 @@ export function Header({
         >
           {/* Logo / Name */}
           <Box
-            component={Link}
+            component={NextLink}
             href={r.home}
             sx={{
               fontFamily: "var(--font-manrope), system-ui, sans-serif",
@@ -76,16 +103,11 @@ export function Header({
           >
             {/* Links */}
             <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
-              {navLinks.map((link) => (
-                <Button key={link.href} component={Link} href={link.href} color="inherit" size="small">
-                  {link.label}
-                </Button>
-              ))}
+              <NavLinks links={navLinks} size="small" />
             </Stack>
-
             {/* Action button */}
             <Button
-              component={Link}
+              component={NextLink}
               href={r.booking}
               variant="contained"
               color="primary"
@@ -136,33 +158,15 @@ export function Header({
           </Stack>
 
           <Stack spacing={1} sx={{ mt: 2 }}>
-            {navLinks.map((link) => (
-              <Button
-                key={link.href}
-                component={Link}
-                href={link.href}
-                color="inherit"
-                size="large"
-                onClick={closeMenu}
-              >
-                {link.label}
-              </Button>
-            ))}
-            <Button
-              component={Link}
-              href={r.booking}
-              variant="contained"
-              color="primary"
-              size="large"
-              onClick={closeMenu}
-            >
-              {dict.booking}
-            </Button>
+            <NavLinks links={navLinks} size="large" onLinkClick={closeMenu} />
           </Stack>
-
           <Box sx={{ flexGrow: 1 }} />
-
           <Divider sx={{ mb: 2 }} />
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ alignItems: "center", justifyContent: "center" }}
+          >
           <Stack direction="row" spacing={1} sx={{ alignItems: "center", justifyContent: "center" }}>
             <ThemeToggle />
             <LocaleSwitcher />

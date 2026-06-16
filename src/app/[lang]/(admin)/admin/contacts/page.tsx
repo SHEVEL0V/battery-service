@@ -55,7 +55,7 @@ export default async function AdminContactsPage({ params }: PageProps<"/[lang]/a
                       )}
                     </TableCell>
                     <TableCell>{contact.message}</TableCell>
-                    <TableCell>{new Date(contact.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(contact.createdAt).toLocaleDateString("en-GB")}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

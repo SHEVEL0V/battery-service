@@ -3,17 +3,27 @@
 import { useActionState } from "react";
 import { Button, Stack, TextField, Typography } from "@mui/material";
 import type { Dictionary, Locale } from "@/i18n/config";
+import { ACTION_ERROR } from "@/lib/actions/types";
 import { login, type LoginState } from "../actions";
 
-const initialState: LoginState = {};
+const initialState: LoginState = null;
 
 interface Props {
   dict: Dictionary["auth"];
+  errorsDict: Dictionary["errors"];
   lang: Locale;
 }
 
-export function LoginForm({ dict, lang }: Props) {
+export function LoginForm({ dict, errorsDict, lang }: Props) {
   const [state, action, isPending] = useActionState(login, initialState);
+  const fieldErrors = state && !state.ok ? state.fieldErrors : undefined;
+
+  const errorMessage =
+    state && !state.ok && state.code !== "validation"
+      ? state.code === ACTION_ERROR.invalidCredentials
+        ? dict.invalidCredentials
+        : errorsDict.serverError
+      : undefined;
 
   return (
     <form action={action}>
@@ -24,8 +34,8 @@ export function LoginForm({ dict, lang }: Props) {
           name="email"
           type="email"
           label={dict.email}
-          error={!!state.errors?.email}
-          helperText={state.errors?.email?.[0]}
+          error={!!fieldErrors?.email}
+          helperText={fieldErrors?.email?.[0]}
           fullWidth
           required
         />
@@ -34,15 +44,15 @@ export function LoginForm({ dict, lang }: Props) {
           name="password"
           type="password"
           label={dict.password}
-          error={!!state.errors?.password}
-          helperText={state.errors?.password?.[0]}
+          error={!!fieldErrors?.password}
+          helperText={fieldErrors?.password?.[0]}
           fullWidth
           required
         />
 
-        {state.message && (
+        {errorMessage && (
           <Typography color="error" variant="body2">
-            {state.message}
+            {errorMessage}
           </Typography>
         )}
 

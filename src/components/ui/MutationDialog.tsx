@@ -11,19 +11,17 @@ import {
   IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import type { ActionResult } from "@/lib/actions/types";
 
-export interface MutationResult {
-  success?: boolean;
-  error?: string;
-}
-
-interface MutationDialogProps<R extends MutationResult> {
+interface MutationDialogProps<T> {
   open: boolean;
   title: string;
   children: React.ReactNode;
   onClose: () => void;
-  onSubmit: () => Promise<R>;
-  onResult?: (result: R) => void;
+  onSubmit: () => Promise<ActionResult<T>>;
+  onResult?: (result: ActionResult<T>) => void;
+  // Локалізований текст для будь-якого коду помилки, окрім "validation" (поля показують свої помилки самі)
+  errorText?: string;
   submitLabel?: string;
   pendingLabel?: string;
   cancelLabel?: string;
@@ -31,19 +29,20 @@ interface MutationDialogProps<R extends MutationResult> {
   disableSubmit?: boolean;
 }
 
-export function MutationDialog<R extends MutationResult>({
+export function MutationDialog<T>({
   open,
   title,
   children,
   onClose,
   onSubmit,
   onResult,
+  errorText,
   submitLabel = "Save",
   pendingLabel = "Saving...",
   cancelLabel = "Cancel",
   maxWidth = "sm",
   disableSubmit,
-}: MutationDialogProps<R>) {
+}: MutationDialogProps<T>) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -54,11 +53,11 @@ export function MutationDialog<R extends MutationResult>({
     setIsPending(false);
 
     onResult?.(result);
-    if (result.success) {
+    if (result.ok) {
       onClose();
       return;
     }
-    if (result.error) setError(result.error);
+    if (result.code !== "validation") setError(errorText ?? result.code);
   };
 
   const handleClose = () => {

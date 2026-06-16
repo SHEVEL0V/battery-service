@@ -16,7 +16,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
   if (!hasLocale(lang)) notFound();
 
   const [
-    { hero, stats, services, howItWorks, whyUs, reviews, bookingCTA, map },
+    { hero, stats, services, howItWorks, whyUs, reviews, bookingCTA, map, errors },
     activeServices,
   ] = await Promise.all([getDictionary(lang), getActiveServices(lang)]);
 
@@ -27,7 +27,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
       <ServicesList dict={services} services={activeServices} lang={lang} />
       <HowItWorks dict={howItWorks} />
       <WhyUs dict={whyUs} />
-      <ReviewsCarousel dict={reviews} lang={lang} />
+      <ReviewsCarousel dict={reviews} errorsDict={errors} lang={lang} />
       <BookingCTA dict={bookingCTA} lang={lang} />
       <MapSection dict={map} />
     </>

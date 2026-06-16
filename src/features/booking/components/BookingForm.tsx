@@ -6,15 +6,15 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { Dictionary, Locale } from "@/i18n/config";
 import { ScrollReveal } from "@/components/animation/ScrollReveal";
 import { SectionBackgroundImage } from "@/components/ui/SectionBackgroundImage";
+import { SuccessState } from "@/components/ui/SuccessState";
 import { adaptiveOverlaySx, adaptiveOverlayVarsSx } from "@/lib/styles/sectionBackground";
 import { createBooking, type BookingState } from "../actions";
 import { BookingStepCar } from "./BookingStepCar";
 import { BookingStepDate } from "./BookingStepDate";
 import { BookingStepContact } from "./BookingStepContact";
-import { BookingSuccess } from "./BookingSuccess";
 import type { BookingDraft, BookingStep } from "../types";
 
-const initialState: BookingState = {};
+const initialState: BookingState = null;
 
 const stepVariants = {
   enter: (direction: number) => ({ opacity: 0, x: direction * 40 }),
@@ -34,6 +34,7 @@ export function BookingForm({ dict, errorsDict, lang }: Props) {
   const [direction, setDirection] = useState(1);
   const [state, action, isPending] = useActionState(createBooking, initialState);
   const prefersReducedMotion = useReducedMotion();
+  const isSuccess = state?.ok === true;
 
   const goTo = (next: BookingStep) => {
     setDirection(next > step ? 1 : -1);
@@ -60,7 +61,7 @@ export function BookingForm({ dict, errorsDict, lang }: Props) {
       <Container maxWidth="sm" sx={{ position: "relative" }}>
         <ScrollReveal>
           <Paper sx={{ p: { xs: 3, md: 5 }, overflow: "hidden" }}>
-            {!state.success && (
+            {!isSuccess && (
               <Stepper activeStep={step - 1} sx={{ mb: 4 }}>
                 {steps.map((label) => (
                   <Step key={label}>
@@ -72,7 +73,7 @@ export function BookingForm({ dict, errorsDict, lang }: Props) {
 
             <AnimatePresence mode="wait" custom={direction} initial={false}>
               <motion.div
-                key={state.success ? "success" : step}
+                key={isSuccess ? "success" : step}
                 custom={direction}
                 variants={prefersReducedMotion ? undefined : stepVariants}
                 initial="enter"
@@ -80,8 +81,8 @@ export function BookingForm({ dict, errorsDict, lang }: Props) {
                 exit="exit"
                 transition={{ duration: 0.35, ease: "easeInOut" }}
               >
-                {state.success ? (
-                  <BookingSuccess dict={dict} />
+                {isSuccess ? (
+                  <SuccessState message={dict.success} />
                 ) : step === 1 ? (
                   <BookingStepCar
                     dict={dict}
@@ -111,7 +112,8 @@ export function BookingForm({ dict, errorsDict, lang }: Props) {
                     <input type="hidden" name="date" value={draft.date ?? ""} />
                     <BookingStepContact
                       dict={dict}
-                      state={state}
+                      fieldErrors={state && !state.ok ? state.fieldErrors : undefined}
+                      errorMessage={state && !state.ok && state.code !== "validation" ? errorsDict.serverError : undefined}
                       isPending={isPending}
                       onPrev={() => goTo(2)}
                     />

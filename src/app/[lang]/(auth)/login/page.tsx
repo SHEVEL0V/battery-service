@@ -7,7 +7,7 @@ export default async function LoginPage({ params }: PageProps<"/[lang]/login">) 
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
 
-  const { auth } = await getDictionary(lang);
+  const { auth, errors } = await getDictionary(lang);
 
   return (
     <Box sx={{ py: { xs: 8, md: 12 }, display: "flex", justifyContent: "center" }}>
@@ -16,7 +16,7 @@ export default async function LoginPage({ params }: PageProps<"/[lang]/login">) 
           <Typography variant="h2" sx={{ mb: 4, textAlign: "center" }}>
             {auth.login}
           </Typography>
-          <LoginForm dict={auth} lang={lang} />
+          <LoginForm dict={auth} errorsDict={errors} lang={lang} />
         </Paper>
       </Container>
     </Box>

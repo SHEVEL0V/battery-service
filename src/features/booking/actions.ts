@@ -1,76 +1,44 @@
 "use server";
 
-import { z } from "zod";
-import { revalidateTag } from "next/cache";
 import prisma from "@/lib/db/prisma";
 import { sendEmail } from "@/lib/integrations/mail";
 import { sendTelegramNotification } from "@/lib/integrations/telegram";
 import { CACHE_TAGS } from "@/lib/cache/cache-tags";
-import { getDictionary, hasLocale, defaultLocale } from "@/i18n/config";
-import { bookingSchema } from "./schema";
+import { formAction } from "@/lib/actions/formAction";
+import type { ActionResult } from "@/lib/actions/types";
+import { bookingSchema, type BookingInput } from "./schema";
 
-export interface BookingState {
-  success?: boolean;
-  error?: string;
-  errors?: Partial<Record<keyof z.infer<typeof bookingSchema>, string[]>>;
-}
+// null — форму ще не надсилали
+export type BookingState = ActionResult<BookingInput> | null;
 
-export async function createBooking(
-  _prevState: BookingState,
-  formData: FormData,
-): Promise<BookingState> {
-  const lang = formData.get("lang");
-  const locale = typeof lang === "string" && hasLocale(lang) ? lang : defaultLocale;
-
-  const validated = bookingSchema.safeParse({
-    name: formData.get("name"),
-    phone: formData.get("phone"),
-    email: formData.get("email"),
-    carModel: formData.get("carModel"),
-    year: formData.get("year"),
-    date: formData.get("date"),
-    message: formData.get("message") || undefined,
-  });
-
-  if (!validated.success) {
-    return { errors: validated.error.flatten().fieldErrors };
-  }
-
-  const { date, ...bookingData } = validated.data;
-
-  let booking;
-  try {
-    booking = await prisma.booking.create({
-      data: { ...bookingData, preferredDate: new Date(date) },
+export const createBooking = formAction({
+  schema: bookingSchema,
+  revalidate: [CACHE_TAGS.bookings],
+  handler: async ({ date, ...data }) => {
+    const booking = await prisma.booking.create({
+      data: { ...data, preferredDate: new Date(date) },
     });
-  } catch {
-    const dict = await getDictionary(locale);
-    return { error: dict.errors.serverError };
-  }
 
-  const clientEmailHtml = `
-    <h2>Дякуємо за вашу заявку!</h2>
-    <p>Ми отримали вашу заявку на ремонт батареї.</p>
-    <p>Наша команда зв'яжеться з вами найближчим часом.</p>
-    <p>ID заявки: ${booking.id}</p>
-  `;
-  const adminMessage = `
-    <b>Нова заявка на ремонт батареї!</b>
-    Ім'я: ${validated.data.name}
-    Телефон: ${validated.data.phone}
-    Email: ${validated.data.email}
-    Модель: ${validated.data.carModel} (${validated.data.year})
-    Бажана дата: ${date}
-    Повідомлення: ${validated.data.message ?? "Немає"}
-  `;
+    const clientEmailHtml = `
+      <h2>Дякуємо за вашу заявку!</h2>
+      <p>Ми отримали вашу заявку на ремонт батареї.</p>
+      <p>Наша команда зв'яжеться з вами найближчим часом.</p>
+      <p>ID заявки: ${booking.id}</p>
+    `;
+    const adminMessage = `
+      <b>Нова заявка на ремонт батареї!</b>
+      Ім'я: ${data.name}
+      Телефон: ${data.phone}
+      Email: ${data.email}
+      Модель: ${data.carModel} (${data.year})
+      Бажана дата: ${date}
+      Повідомлення: ${data.message ?? "Немає"}
+    `;
 
-  // Сповіщення некритичні для користувача — не блокують успіх запису
-  await Promise.allSettled([
-    sendEmail(validated.data.email, "Підтвердження заявки", clientEmailHtml),
-    sendTelegramNotification(adminMessage),
-  ]);
-
-  revalidateTag(CACHE_TAGS.bookings, "default");
-
-  return { success: true };
-}
+    // Сповіщення некритичні для користувача — не блокують успіх запису
+    await Promise.allSettled([
+      sendEmail(data.email, "Підтвердження заявки", clientEmailHtml),
+      sendTelegramNotification(adminMessage),
+    ]);
+  },
+});

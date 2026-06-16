@@ -84,7 +84,7 @@ src/
 │   │   │   ├── ServiceListCard.tsx  ← картка на /services
 │   │   │   └── ServicesList.tsx     ← client, дані приходять props'ами з RSC
 │   │   ├── format.ts                ← formatPrice (завжди UAH, формат числа під локаль)
-│   │   ├── types.ts                 ← LocalizedService
+│   │   ├── types.ts                 ← LocalizedService + toLocalizedService(service, locale)
 │   │   └── queries.ts               ← server-only, unstable_cache + некешовані admin-запити
 │   ├── reviews/
 │   │   ├── components/
@@ -92,6 +92,7 @@ src/
 │   │   │   └── AddReviewDialog.tsx
 │   │   ├── actions.ts               ← submitReview() 'use server'
 │   │   ├── schema.ts
+│   │   ├── types.ts                 ← LocalizedReview + toLocalizedReview(review, locale)
 │   │   └── queries.ts               ← server-only, unstable_cache + некешовані admin-запити
 │   ├── map/
 │   │   └── components/
@@ -118,6 +119,11 @@ src/
 │       └── schema.ts
 │
 ├── lib/
+│   ├── actions/                     ← уніфікований шар Server Actions (server-only)
+│   │   ├── types.ts                 ← ActionResult<T>, ok()/fail(), ACTION_ERROR коди, FieldErrors<T>
+│   │   ├── runAction.ts             ← ядро пайплайну (auth → Zod → handler → revalidate → код помилки) + zodParse + інвалідація кешу
+│   │   ├── formAction.ts            ← фабрика form-екшенів поверх runAction
+│   │   └── mutate.ts                ← mutate() (імперативні admin-мутації) + mutateWith() (з Zod-валідацією) поверх runAction
 │   ├── auth/
 │   │   ├── session.ts               ← server-only, Jose JWT
 │   │   ├── cookies.ts               ← server-only, createSession/deleteSession
@@ -125,7 +131,7 @@ src/
 │   ├── db/
 │   │   └── prisma.ts                ← singleton PrismaClient (MongoDB)
 │   ├── cache/
-│   │   └── cache-tags.ts
+│   │   └── cache-tags.ts            ← CACHE_TAGS + CacheTag type
 │   ├── routing/
 │   │   └── routes.ts                ← routes(lang) — всі внутрішні URL тільки звідси
 │   ├── styles/
@@ -135,7 +141,7 @@ src/
 │       └── telegram.ts              ← server-only, Telegram Bot API через fetch (без SDK)
 │
 ├── i18n/
-│   ├── config.ts                    ← getDictionary(), hasLocale(), Dictionary type
+│   ├── config.ts                    ← getDictionary(), hasLocale(), localeFromFormData(), Dictionary type
 │   ├── uk.json                      ← всі переклади UK
 │   └── en.json                      ← всі переклади EN
 │
@@ -145,7 +151,7 @@ src/
 │   ├── theme.ts                     ← 'use client', MUI v9 CSS Variables theme + Manrope font
 │   └── maps.ts                      ← MAP_CONFIG (center, zoom)
 │
-├── types/index.ts                   ← реекспорт Prisma types + ApiResponse
+├── types/index.ts                   ← реекспорт Prisma types
 └── proxy.ts                         ← locale redirect + optimistic auth check
 
 prisma/
@@ -791,27 +797,71 @@ SESSION_SECRET="згенерований_рядок_32_символи"
 
 ## Server Actions — конвенції
 
+Усі мутації будуються поверх уніфікованого шару `src/lib/actions/`. Жоден екшен **не**
+повторює вручну `verifySession` / `safeParse` / `try-catch` / `revalidateTag` —
+це інкапсульовано у фабриках. Винятки (auth/cookies, redirect) пробрасуються через
+`unstable_rethrow`, інші помилки логуються і повертаються як `serverError`.
+
+### Контракт результату (`lib/actions/types.ts`)
+
+```ts
+type ActionResult<T = unknown> =
+  | { ok: true }
+  | { ok: false; code: string; fieldErrors?: FieldErrors<T> }
+
+ok()                                  // { ok: true }
+fail(code, fieldErrors?)              // { ok: false, ... }
+
+// Стабільні коди — локалізований текст підставляє клієнт зі словника
+ACTION_ERROR = { validation, serverError, invalidCredentials }
+```
+
+### Form-екшени — `formAction({ schema, requireAuth?, revalidate?, handler })`
+
 ```ts
 'use server'
-export async function someAction(
-  prevState: SomeState,
-  formData: FormData
-): Promise<SomeState> {
-  await verifySession()                          // 1. auth (якщо потрібно)
-  const validated = schema.safeParse(...)        // 2. Zod валідація
-  if (!validated.success) return { errors: ... }
-  await prisma.model.create(...)                 // 3. БД
-  revalidateTag(CACHE_TAGS.relevant)             // 4. інвалідація кешу
-  return { success: true }                       // 5. redirect() поза try/catch
+import { formAction } from '@/lib/actions/formAction'
+import { CACHE_TAGS } from '@/lib/cache/cache-tags'
+
+export type BookingState = ActionResult<BookingInput> | null  // null — форму ще не надсилали
+
+export const createBooking = formAction({
+  schema: bookingSchema,                    // 1. auth (requireAuth) → 2. Zod (порожні "" відкидаються)
+  revalidate: [CACHE_TAGS.bookings],        // інвалідація лише на успіху handler'а
+  handler: async (data, formData) => {      // 3. БД; повертає void (=ok), fail(...) або нічого
+    await prisma.booking.create({ data })
+    // redirect() / fail(ACTION_ERROR.invalidCredentials) — теж дозволені
+  },
+})
+```
+
+`formAction` повертає `(prevState, formData) => Promise<ActionResult>` — готову сигнатуру для `useActionState`.
+
+### Імперативні admin-мутації — `mutate` / `mutateWith`
+
+```ts
+// Без форми, без валідації — auth + try/catch + revalidate
+export async function updateBookingStatus(id: string, status: BookingStatus) {
+  return mutate(() => prisma.booking.update({ where: { id }, data: { status } }), [CACHE_TAGS.bookings])
+}
+
+// З типізованим input + Zod-валідацією (повертає fieldErrors при невдачі)
+export async function createService(input: ServiceInput) {
+  return mutateWith(serviceSchema, input, (data) => prisma.service.create({ data }), [CACHE_TAGS.services])
 }
 ```
 
-Client Component:
+### Client Component
+
 ```tsx
 'use client'
-const [state, action, isPending] = useActionState(someAction, initialState)
+const [state, action, isPending] = useActionState(createBooking, initialState)
 // <form action={action}> — не onSubmit
+// field-помилки: state.ok === false && state.fieldErrors?.name?.[0]
+// загальна помилка: state.code !== 'validation' → текст зі словника errors.*
 ```
+
+Імперативні мутації споживаються через `MutationDialog` (`onSubmit: () => Promise<ActionResult<T>>`).
 
 ---
 
@@ -819,8 +869,12 @@ const [state, action, isPending] = useActionState(someAction, initialState)
 
 ```ts
 // unstable_cache — між запитами (ISR для Prisma), колокований у features/<feature>/queries.ts
+// Локалізація — у query через мапер toLocalized*(row, locale), не в компоненті
 export const getActiveServices = unstable_cache(
-  async (locale: Locale) => prisma.service.findMany({ where: { isActive: true } }),
+  async (locale: Locale) => {
+    const rows = await prisma.service.findMany({ where: { isActive: true }, orderBy: { order: 'asc' } })
+    return rows.map((s) => toLocalizedService(s, locale))
+  },
   ['active-services'],
   { tags: [CACHE_TAGS.services], revalidate: 3600 }
 )
@@ -828,12 +882,17 @@ export const getActiveServices = unstable_cache(
 // React.cache() — дедуплікація в render pass (DAL функції)
 export const verifySession = cache(async () => { ... })
 
-// Паралельне завантаження — завжди Promise.all
+// Паралельне завантаження — завжди Promise.all; локалізовані queries приймають lang
 const [services, reviews] = await Promise.all([
   getActiveServices(lang),
-  getVisibleReviews(),
+  getVisibleReviews(lang),
 ])
 ```
+
+> **Конвенція локалізації даних**: публічні queries повертають уже локалізований рядок
+> (`LocalizedService.title`, `LocalizedReview.text`) через мапер з `features/<feature>/types.ts` —
+> компонент **не** обирає мову з `*Uk`/`*En` полів. Admin queries (`getAllServices`,
+> `getAllReviews`) повертають сирі двомовні поля — потрібні для редагування.
 
 ```ts
 // src/lib/cache/cache-tags.ts
@@ -842,9 +901,14 @@ export const CACHE_TAGS = {
   reviews:  'reviews',
   bookings: 'bookings',
 } as const
+
+export type CacheTag = (typeof CACHE_TAGS)[keyof typeof CACHE_TAGS]
 ```
 
 Admin сторінки: `export const dynamic = 'force-dynamic'`
+
+> Інвалідація кешу — **не** прямим `revalidateTag`, а декларативно через `revalidate: [CACHE_TAGS.x]`
+> у `formAction`/`mutate`/`mutateWith` (виклик централізовано у `lib/actions/runAction.ts`).
 
 ---
 
@@ -1104,7 +1168,11 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="..."
 - Стилі: тільки MUI `sx` prop або `styled()`, кольори тільки через `theme.palette`
 - `getDictionary` — тільки в RSC, Client Components отримують `dict` через props
 - Внутрішні URL — тільки через `routes(lang)` з `src/lib/routing/routes.ts`, не через template-літерали
-- Server Actions повертають стабільні коди помилок; локалізований текст підставляє клієнт зі словника
+- Мутації — **тільки** через `formAction`/`mutate`/`mutateWith` з `src/lib/actions/`; не повторювати
+  `verifySession`/`safeParse`/`try-catch`/`revalidateTag` вручну в екшені
+- Server Actions повертають `ActionResult<T>` зі стабільним кодом помилки (`ACTION_ERROR`); локалізований текст підставляє клієнт зі словника
+- Інвалідація кешу — декларативно через `revalidate: [CACHE_TAGS.x]`, не прямим `revalidateTag`
+- Локалізація даних — у query через `toLocalized*` мапер; компоненти не читають `*Uk`/`*En` поля
 - Ціни зберігаються в UAH; `formatPrice` змінює лише формат числа під локаль, не валюту
 - Не створювати файли-реекспорти/aliases (наприклад, `export { X as Y } from './X'`) — імпортувати напряму з оригінального файлу
 - Git: `feat:` / `fix:` / `style:` / `refactor:` / `chore:`

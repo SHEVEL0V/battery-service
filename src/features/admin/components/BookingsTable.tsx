@@ -1,21 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import {
   Chip,
   MenuItem,
-  Paper,
   Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Typography,
   type SelectChangeEvent,
 } from "@mui/material";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { formatDate } from "@/lib/format/date";
+import { useRowAction } from "@/lib/hooks/useRowAction";
 import type { Booking, BookingStatus } from "@/types";
 import { updateBookingStatus } from "../actions";
 
@@ -30,77 +24,50 @@ const STATUS_COLORS: Record<BookingStatus, "default" | "info" | "warning" | "suc
 };
 
 export function BookingsTable({ bookings }: { bookings: Booking[] }) {
-  const router = useRouter();
-  const [pendingId, setPendingId] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const { pendingId, isPending, run } = useRowAction();
 
   const handleStatusChange = (id: string, event: SelectChangeEvent<BookingStatus>) => {
-    const status = event.target.value as BookingStatus;
-    setPendingId(id);
-    startTransition(async () => {
-      await updateBookingStatus(id, status);
-      setPendingId(null);
-      router.refresh();
-    });
+    run(id, () => updateBookingStatus(id, event.target.value as BookingStatus));
   };
 
-  if (bookings.length === 0) {
-    return <Typography color="text.secondary">No bookings yet.</Typography>;
-  }
-
-  return (
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Contact</TableCell>
-            <TableCell>Car</TableCell>
-            <TableCell>Preferred date</TableCell>
-            <TableCell>Created</TableCell>
-            <TableCell>Status</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {bookings.map((booking) => (
-            <TableRow key={booking.id}>
-              <TableCell>{booking.name}</TableCell>
-              <TableCell>
-                <Typography variant="body2">{booking.phone}</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {booking.email}
-                </Typography>
-              </TableCell>
-              <TableCell>
-                {booking.carModel} ({booking.year})
-              </TableCell>
-              <TableCell>
-                {booking.preferredDate
-                  ? new Date(booking.preferredDate).toLocaleDateString()
-                  : "—"}
-              </TableCell>
-              <TableCell>{new Date(booking.createdAt).toLocaleDateString()}</TableCell>
-              <TableCell>
-                <Select<BookingStatus>
-                  value={booking.status}
-                  size="small"
-                  disabled={isPending && pendingId === booking.id}
-                  onChange={(event) => handleStatusChange(booking.id, event)}
-                  renderValue={(value) => (
-                    <Chip label={value} color={STATUS_COLORS[value]} size="small" />
-                  )}
-                >
-                  {STATUSES.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {status}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </TableCell>
-            </TableRow>
+  const columns: Column<Booking>[] = [
+    { header: "Name", render: (booking) => booking.name },
+    {
+      header: "Contact",
+      render: (booking) => (
+        <>
+          <Typography variant="body2">{booking.phone}</Typography>
+          <Typography variant="caption" color="text.secondary">
+            {booking.email}
+          </Typography>
+        </>
+      ),
+    },
+    { header: "Car", render: (booking) => `${booking.carModel} (${booking.year})` },
+    {
+      header: "Preferred date",
+      render: (booking) => (booking.preferredDate ? formatDate(booking.preferredDate) : "—"),
+    },
+    { header: "Created", render: (booking) => formatDate(booking.createdAt) },
+    {
+      header: "Status",
+      render: (booking) => (
+        <Select<BookingStatus>
+          value={booking.status}
+          size="small"
+          disabled={isPending && pendingId === booking.id}
+          onChange={(event) => handleStatusChange(booking.id, event)}
+          renderValue={(value) => <Chip label={value} color={STATUS_COLORS[value]} size="small" />}
+        >
+          {STATUSES.map((status) => (
+            <MenuItem key={status} value={status}>
+              {status}
+            </MenuItem>
           ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  );
+        </Select>
+      ),
+    },
+  ];
+
+  return <DataTable rows={bookings} columns={columns} empty="No bookings yet." />;
 }
