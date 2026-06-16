@@ -77,7 +77,13 @@ export function Header({
             {/* Links */}
             <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
               {navLinks.map((link) => (
-                <Button key={link.href} component={Link} href={link.href} color="inherit" size="small">
+                <Button
+                  key={link.href}
+                  component={Link}
+                  href={link.href}
+                  color="inherit"
+                  size="small"
+                >
                   {link.label}
                 </Button>
               ))}
@@ -163,7 +169,11 @@ export function Header({
           <Box sx={{ flexGrow: 1 }} />
 
           <Divider sx={{ mb: 2 }} />
-          <Stack direction="row" spacing={1} sx={{ alignItems: "center", justifyContent: "center" }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ alignItems: "center", justifyContent: "center" }}
+          >
             <ThemeToggle />
             <LocaleSwitcher />
           </Stack>
