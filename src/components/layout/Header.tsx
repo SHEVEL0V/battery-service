@@ -105,7 +105,6 @@ export function Header({
             <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
               <NavLinks links={navLinks} size="small" />
             </Stack>
-
             {/* Action button */}
             <Button
               component={NextLink}
@@ -160,26 +159,15 @@ export function Header({
 
           <Stack spacing={1} sx={{ mt: 2 }}>
             <NavLinks links={navLinks} size="large" onLinkClick={closeMenu} />
-            <Button
-              component={NextLink}
-              href={r.booking}
-              variant="contained"
-              color="primary"
-              size="large"
-              onClick={closeMenu}
-            >
-              {dict.booking}
-            </Button>
           </Stack>
-
           <Box sx={{ flexGrow: 1 }} />
-
           <Divider sx={{ mb: 2 }} />
           <Stack
             direction="row"
             spacing={1}
             sx={{ alignItems: "center", justifyContent: "center" }}
           >
+          <Stack direction="row" spacing={1} sx={{ alignItems: "center", justifyContent: "center" }}>
             <ThemeToggle />
             <LocaleSwitcher />
           </Stack>
